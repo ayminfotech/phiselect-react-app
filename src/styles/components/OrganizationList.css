@@ -1,0 +1,17 @@
+.organization-list {
+    margin: 20px;
+  }
+  
+  .organization-list table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  .organization-list th, .organization-list td {
+    padding: 10px;
+    border: 1px solid #ddd;
+  }
+  
+  .organization-list button {
+    margin-right: 10px;
+  }

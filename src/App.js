@@ -1,25 +1,55 @@
-import logo from './logo.svg';
-import './App.css';
+import React from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import Login from './components/auth/Login';
+import Logout from './components/auth/Logout';
+import TenantsOnboard from './components/admin/TenantsOnboard';
+import TenantAddPage from './components/admin/TenantAddPage';
+import TenantDashboard from './components/admin/TenantDashboard';
+import ProtectedRoute from './components/common/ProtectedRoute';
+import { AuthProvider } from './components/auth/AuthContext';
 
-function App() {
+const App = () => {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <AuthProvider>
+      <Routes>
+        {/* Public Route */}
+        <Route path="/login" element={<Login />} />
+
+        <Route path="/logout" element={<Logout />} />
+
+        {/* Super Admin Routes */}
+        <Route 
+          path="/onboard" 
+          element={
+            <ProtectedRoute allowedRoles={['SUPER_ADMIN']}>
+              <TenantsOnboard />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/super-admin/tenants/add" 
+          element={
+            <ProtectedRoute allowedRoles={['SUPER_ADMIN']}>
+              <TenantAddPage />
+            </ProtectedRoute>
+          } 
+        />
+
+        {/* Tenant Admin Route */}
+        <Route 
+          path="/tenant/:tenantId/dashboard" 
+          element={
+            <ProtectedRoute allowedRoles={['MANAGER']}>
+              <TenantDashboard />
+            </ProtectedRoute>
+          } 
+        />
+
+        {/* Fallback */}
+        <Route path="*" element={<Navigate to="/login" />} />
+      </Routes>
+    </AuthProvider>
   );
-}
+};
 
 export default App;

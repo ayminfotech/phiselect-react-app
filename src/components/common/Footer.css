@@ -1,0 +1,24 @@
+.footer {
+    padding: 20px;
+    background-color: #1a1a2e;
+    color: white;
+    text-align: center;
+    margin-top: auto;
+  }
+  
+  .footer ul {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+  }
+  
+  .footer a {
+    color: white;
+    text-decoration: none;
+  }
+  
+  .footer a:hover {
+    text-decoration: underline;
+  }
