@@ -1,32 +1,32 @@
-/* General Sidebar */
-.tenant-sidebar {
+/* src/styles/TenetSidebar.css */
+
+/* Sidebar */
+.tenet-sidebar {
     width: 260px;
-    background-color: #28333f; /* Dark sidebar background */
+    background-color: #28333f;
     color: white;
     padding: 20px;
     display: flex;
     flex-direction: column;
-    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
   }
   
-  .tenant-sidebar-header {
+  .tenet-sidebar-header {
     text-align: center;
     margin-bottom: 20px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.2); /* Divider below header */
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
     padding-bottom: 15px;
   }
   
-  .tenant-sidebar-header h2 {
-    font-size: 1.5rem;
+  .tenet-sidebar-header h2 {
+    font-size: 1.6rem;
     font-weight: bold;
-    color: #ffcc00; /* Bright yellow for emphasis */
+    color: #ffcc00;
     margin: 0;
     text-transform: uppercase;
-    letter-spacing: 1px; /* Adds a modern feel */
+    letter-spacing: 1px;
   }
   
-  /* Sidebar Menu */
-  .tenant-sidebar-menu {
+  .tenet-sidebar-menu {
     list-style: none;
     padding: 0;
     margin: 0;
@@ -35,54 +35,49 @@
   
   .menu-item {
     display: flex;
-    align-items: center; /* Align icon and text vertically */
-    padding: 12px 20px; /* Comfortable padding for click area */
+    align-items: center;
+    padding: 14px 20px;
     cursor: pointer;
     font-size: 1rem;
-    border-radius: 6px; /* Rounded corners for modern look */
-    transition: background-color 0.3s ease, color 0.3s ease; /* Smooth hover effect */
-    margin-bottom: 8px; /* Space between items */
-    color: white; /* Default text color */
-    font-weight: 500; /* Medium font weight for readability */
+    border-radius: 6px;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    margin-bottom: 8px;
+    color: white;
+    font-weight: 500;
   }
   
   .menu-item i {
-    font-size: 1.2rem; /* Icon size */
-    margin-right: 12px; /* Space between icon and text */
-    color: #ffcc00; /* Icon color to match header */
-  }
-  
-  .menu-item span {
-    font-size: 1rem;
-    font-weight: 600; /* Slightly bold text */
+    font-size: 1.2rem;
+    margin-right: 12px;
+    color: #ffcc00;
   }
   
   .menu-item.active,
   .menu-item:hover {
-    background-color: #ffcc00; /* Highlight background */
-    color: #28333f; /* Text color for contrast */
-    transform: scale(1.03); /* Subtle zoom effect on hover/active */
+    background-color: #ffcc00;
+    color: #28333f;
+    transform: scale(1.03);
   }
   
   .menu-item.active i,
   .menu-item:hover i {
-    color: #28333f; /* Icon color for active/hover state */
+    color: #28333f;
   }
   
   /* Sidebar Footer */
-  .tenant-sidebar-footer {
-    margin-top: auto; /* Push footer to the bottom */
+  .tenet-sidebar-footer {
+    margin-top: auto;
     padding-top: 20px;
-    border-top: 1px solid rgba(255, 255, 255, 0.2); /* Subtle divider */
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
     text-align: center;
   }
   
   .logout-button {
-    background-color: #e74c3c; /* Red button for logout */
+    background-color: #e74c3c;
     color: white;
     padding: 10px 20px;
     border: none;
-    border-radius: 6px; /* Matches menu item style */
+    border-radius: 6px;
     cursor: pointer;
     font-size: 1rem;
     transition: background-color 0.3s ease, transform 0.2s ease;
@@ -90,5 +85,5 @@
   
   .logout-button:hover {
     background-color: #c0392b;
-    transform: scale(1.05); /* Slight zoom effect on hover */
+    transform: scale(1.05);
   }

@@ -1,46 +1,56 @@
-import React from "react";
-import PropTypes from "prop-types";
-import "./TenantsOnboard.css";
+// src/components/admin/TenetSidebar.js
+import React from 'react';
+import PropTypes from 'prop-types';
+import { useNavigate } from 'react-router-dom';
+import './TenantSidebar.css';
 
-const TenantSidebar = ({ activeItem, onMenuClick, onLogout }) => {
-  const menuItems = [
-    { label: "Overview", icon: "fa fa-dashboard" },
-    { label: "Tenants", icon: "fa fa-users" },
-    { label: "Onboarding", icon: "fa fa-rocket" },
-    { label: "Reports", icon: "fa fa-chart-bar" },
-    { label: "Settings", icon: "fa fa-cog" },
-  ];
+const TenetSidebar = ({ activeItem, onMenuClick, onLogout }) => {
+  const navigate = useNavigate();
+
+  const handleMenuClick = (item) => {
+    onMenuClick(item);
+    if (item === 'Tenets') {
+      navigate('/onboard');
+    } else if (item === 'Reports') {
+      navigate('/super-admin/reports');
+    }
+  };
 
   return (
-    <aside className="tenant-sidebar">
-      <div className="tenant-sidebar-header">
-        <h2>Tenant Management</h2>
+    <div className="tenet-sidebar">
+      <div className="tenet-sidebar-header">
+        <h2>ATS Admin</h2>
       </div>
-      <ul className="tenant-sidebar-menu">
-        {menuItems.map((item) => (
-          <li
-            key={item.label}
-            className={`menu-item ${item.label === activeItem ? "active" : ""}`}
-            onClick={() => onMenuClick(item.label)}
-          >
-            <i className={item.icon}></i>
-            <span>{item.label}</span>
-          </li>
-        ))}
+      <ul className="tenet-sidebar-menu">
+        <li
+          className={`menu-item ${activeItem === 'Tenets' ? 'active' : ''}`}
+          onClick={() => handleMenuClick('Tenets')}
+        >
+          <i className="fa fa-building"></i>
+          <span>Tenets</span>
+        </li>
+        <li
+          className={`menu-item ${activeItem === 'Reports' ? 'active' : ''}`}
+          onClick={() => handleMenuClick('Reports')}
+        >
+          <i className="fa fa-chart-bar"></i>
+          <span>Reports</span>
+        </li>
+        {/* Add more menu items if needed */}
       </ul>
-      <div className="tenant-sidebar-footer">
-        <button onClick={onLogout} className="logout-button">
+      <div className="tenet-sidebar-footer">
+        <button className="logout-button" onClick={onLogout}>
           Logout
         </button>
       </div>
-    </aside>
+    </div>
   );
 };
 
-TenantSidebar.propTypes = {
+TenetSidebar.propTypes = {
   activeItem: PropTypes.string.isRequired,
   onMenuClick: PropTypes.func.isRequired,
   onLogout: PropTypes.func.isRequired,
 };
 
-export default TenantSidebar;
+export default TenetSidebar;

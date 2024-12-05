@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { createTenant } from "../../services/TenantService";
+import { createTenet } from "../../services/TenantService";
 import "./TenantAddPage.css";
 
 const TenantAddPage = () => {
@@ -46,7 +46,7 @@ const TenantAddPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await createTenant(tenantDetails);
+      await createTenet(tenantDetails);
       alert("Tenant successfully added!");
       navigate("/super-admin/tenants");
     } catch (error) {

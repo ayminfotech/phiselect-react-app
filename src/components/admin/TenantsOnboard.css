@@ -1,109 +1,16 @@
+/* src/styles/TenetsOnboard.css */
+
 /* General Layout */
-.tenants-onboard-container {
+.tenets-onboard-container {
   display: flex;
   height: 100vh;
   font-family: 'Arial', sans-serif;
-  background-color: #f4f6f9; /* Light background for contrast with sidebar */
+  background-color: #f4f6f9;
   color: #333;
   overflow: hidden;
 }
 
-/* Sidebar */
-.tenant-sidebar {
-  width: 260px; /* Sidebar width */
-  background-color: #28333f; /* Dark sidebar background */
-  color: white;
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
-}
-
-.tenant-sidebar-header {
-  text-align: center;
-  margin-bottom: 20px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2); /* Divider below header */
-  padding-bottom: 15px;
-}
-
-.tenant-sidebar-header h2 {
-  font-size: 1.6rem; /* Larger font for header */
-  font-weight: bold;
-  color: #ffcc00; /* Bright yellow for emphasis */
-  margin: 0;
-  text-transform: uppercase;
-  letter-spacing: 1px; /* Adds a modern feel */
-}
-
-/* Sidebar Menu */
-.tenant-sidebar-menu {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  flex-grow: 1;
-}
-
-.menu-item {
-  display: flex;
-  align-items: center; /* Align icon and text vertically */
-  padding: 14px 20px; /* Comfortable padding for click area */
-  cursor: pointer;
-  font-size: 1rem;
-  border-radius: 6px; /* Rounded corners for modern look */
-  transition: background-color 0.3s ease, color 0.3s ease; /* Smooth hover effect */
-  margin-bottom: 8px; /* Space between items */
-  color: white; /* Default text color */
-  font-weight: 500; /* Medium font weight for readability */
-}
-
-.menu-item i {
-  font-size: 1.2rem; /* Icon size */
-  margin-right: 12px; /* Space between icon and text */
-  color: #ffcc00; /* Icon color to match header */
-}
-
-.menu-item span {
-  font-size: 1rem;
-  font-weight: 600; /* Slightly bold text */
-}
-
-.menu-item.active,
-.menu-item:hover {
-  background-color: #ffcc00; /* Highlight background */
-  color: #28333f; /* Text color for contrast */
-  transform: scale(1.03); /* Subtle zoom effect on hover/active */
-}
-
-.menu-item.active i,
-.menu-item:hover i {
-  color: #28333f; /* Icon color for active/hover state */
-}
-
-/* Sidebar Footer */
-.tenant-sidebar-footer {
-  margin-top: auto; /* Push footer to the bottom */
-  padding-top: 20px;
-  border-top: 1px solid rgba(255, 255, 255, 0.2); /* Subtle divider */
-  text-align: center;
-}
-
-.logout-button {
-  background-color: #e74c3c; /* Red button for logout */
-  color: white;
-  padding: 10px 20px;
-  border: none;
-  border-radius: 6px; /* Matches menu item style */
-  cursor: pointer;
-  font-size: 1rem;
-  transition: background-color 0.3s ease, transform 0.2s ease;
-}
-
-.logout-button:hover {
-  background-color: #c0392b;
-  transform: scale(1.05); /* Slight zoom effect on hover */
-}
-
-/* Main Content */
+/* Content */
 .content {
   flex-grow: 1;
   padding: 30px;
@@ -143,82 +50,10 @@
   transform: scale(1.05);
 }
 
-/* Tenant List */
-.tenant-list-container {
+/* Tenet List */
+.tenet-list-container {
   background-color: white;
   border-radius: 12px;
   padding: 20px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-.tenant-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.tenant-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 15px 0;
-  border-bottom: 1px solid #f1f1f1;
-}
-
-.tenant-item:last-child {
-  border-bottom: none;
-}
-
-.tenant-item span {
-  flex: 1;
-  text-align: center;
-  font-size: 1rem;
-  color: #555;
-}
-
-.actions {
-  display: flex;
-  gap: 10px;
-}
-
-.actions button {
-  padding: 8px 12px;
-  border: none;
-  border-radius: 5px;
-  font-size: 0.9rem;
-  cursor: pointer;
-  color: white;
-  background-color: #2ecc71;
-  transition: background-color 0.3s ease, transform 0.2s ease;
-}
-
-.actions button:hover {
-  background-color: #27ae60;
-  transform: scale(1.05);
-}
-
-.actions .delete {
-  background-color: #e74c3c;
-}
-
-.actions .delete:hover {
-  background-color: #c0392b;
-}
-
-.show-more-button {
-  display: block;
-  margin: 20px auto;
-  padding: 12px 20px;
-  border: none;
-  background-color: #ffcc00;
-  color: #28333f;
-  border-radius: 5px;
-  cursor: pointer;
-  font-size: 1rem;
-  transition: background-color 0.3s ease, transform 0.2s ease;
-}
-
-.show-more-button:hover {
-  background-color: #e0a800;
-  transform: scale(1.05);
 }
