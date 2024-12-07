@@ -1,0 +1,321 @@
+/* src/components/auth/Login.module.css */
+
+/* Define CSS Variables */
+:root {
+    /* Color Palette */
+    --color-primary: #2d89ef;
+    --color-primary-dark: #1b5fad;
+    --color-secondary: #6c757d;
+    --color-secondary-dark: #5a6268;
+    --color-danger: #dc3545;
+    --color-light: #f4f4f4;
+    --color-white: #ffffff;
+    --color-dark: #333333;
+
+    /* Font Settings */
+    --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    --font-size-base: 16px;
+    --font-size-lg: 1.2rem;
+    --font-size-xl: 2rem;
+    --font-size-xxl: 2.5rem;
+
+    /* Border Radius */
+    --border-radius: 5px;
+
+    /* Transition Speed */
+    --transition-speed: 0.3s;
+}
+
+/* Dark Mode Variables */
+[data-theme="dark"] {
+    --color-primary: #1a237e;
+    --color-primary-dark: #0d47a1;
+    --color-secondary: #616161;
+    --color-secondary-dark: #424242;
+    --color-danger: #e53935;
+    --color-light: #303030;
+    --color-white: #ffffff;
+    --color-dark: #f5f5f5;
+}
+
+/* General styling */
+body {
+    margin: 0;
+    font-family: var(--font-family);
+    background-color: var(--color-light);
+}
+
+.loginContainer {
+    display: flex;
+    height: 100vh;
+    align-items: center;
+    justify-content: center;
+    background: #ffffff;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    transition: box-shadow var(--transition-speed), transform var(--transition-speed);
+}
+
+.loginContainer:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+
+/* Highlight Section (Left Side) */
+.loginHighlight {
+    width: 50%;
+    padding: 60px 40px;
+    background-color: var(--color-primary);
+    color: var(--color-white);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    background-size: cover;
+    background-position: center;
+    position: relative;
+    box-sizing: border-box;
+    transition: background-color var(--transition-speed);
+}
+
+.loginHighlight::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(45, 137, 239, 0.8); /* Overlay for better text readability */
+    z-index: 1;
+    transition: background-color var(--transition-speed);
+}
+
+.loginHighlight > * {
+    position: relative;
+    z-index: 2;
+}
+
+.logo {
+    width: 150px;
+    margin-bottom: 30px;
+    transition: transform var(--transition-speed);
+}
+
+.logo:hover {
+    transform: scale(1.05);
+}
+
+.loginHighlight h2 {
+    font-size: var(--font-size-xxl);
+    margin-bottom: 20px;
+    font-weight: 700;
+    transition: font-size var(--transition-speed);
+}
+
+.loginHighlight p {
+    font-size: var(--font-size-lg);
+    margin-bottom: 25px;
+    font-weight: 400;
+    transition: font-size var(--transition-speed);
+}
+
+.loginHighlight ul {
+    list-style: none;
+    padding: 0;
+}
+
+.loginHighlight ul li {
+    margin-bottom: 15px;
+    font-size: 1rem;
+    display: flex;
+    align-items: flex-start;
+    position: relative;
+    padding-left: 20px;
+    transition: font-size var(--transition-speed);
+}
+
+.loginHighlight ul li::before {
+    content: "✔"; /* Checkmark icon */
+    color: var(--color-primary-dark);
+    position: absolute;
+    left: 0;
+    top: 0;
+    font-size: 1.2rem;
+    line-height: 1;
+}
+
+/* Login Form Section (Right Side) */
+.loginForm {
+    width: 50%;
+    padding: 60px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #ffffff;
+    box-sizing: border-box;
+    transition: background-color var(--transition-speed);
+}
+
+.formWrapper {
+    width: 100%;
+    max-width: 400px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border-radius: var(--border-radius);
+    padding: 20px;
+    background-color: #ffffff;
+    transition: box-shadow var(--transition-speed), transform var(--transition-speed);
+}
+
+.formWrapper:hover {
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    transform: translateY(-2px);
+}
+
+.loginForm h1 {
+    margin-bottom: 30px;
+    font-size: 2rem;
+    color: var(--color-primary);
+    text-align: center;
+    font-weight: 700;
+    transition: font-size var(--transition-speed);
+}
+
+.loginForm form {
+    display: flex;
+    flex-direction: column;
+}
+
+.formGroup {
+    margin-bottom: 20px;
+    position: relative;
+}
+
+.formGroup label {
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: var(--color-dark);
+}
+
+.formGroup input {
+    padding: 12px 15px;
+    border: 1px solid #cccccc;
+    border-radius: var(--border-radius);
+    font-size: 1rem;
+    transition: border-color var(--transition-speed), box-shadow var(--transition-speed);
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.formGroup input:hover {
+    border-color: var(--color-primary-dark);
+}
+
+.formGroup input:focus {
+    border-color: var(--color-primary);
+    outline: none;
+    box-shadow: 0 0 5px rgba(45, 137, 239, 0.5);
+}
+
+.primaryButton {
+    padding: 12px 20px;
+    background-color: var(--color-primary);
+    color: var(--color-white);
+    border: none;
+    border-radius: var(--border-radius);
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color var(--transition-speed), transform var(--transition-speed);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.primaryButton:hover {
+    background-color: var(--color-primary-dark);
+    transform: translateY(-2px);
+}
+
+.primaryButton:active {
+    background-color: #174a9a;
+    transform: translateY(0);
+}
+
+.loginFooter {
+    margin-top: 20px;
+    font-size: 0.95rem;
+    text-align: center;
+    color: #555555;
+    transition: color var(--transition-speed);
+}
+
+.loginFooter a {
+    color: var(--color-primary);
+    text-decoration: none;
+    font-weight: 600;
+    transition: color var(--transition-speed);
+}
+
+.loginFooter a:hover {
+    color: var(--color-primary-dark);
+}
+
+/* Responsive Design */
+@media (max-width: 992px) {
+    .loginContainer {
+        flex-direction: column;
+    }
+
+    .loginHighlight,
+    .loginForm {
+        width: 100%;
+        padding: 40px 20px;
+    }
+
+    .loginHighlight {
+        height: 50vh;
+    }
+
+    .loginForm {
+        height: 50vh;
+    }
+
+    .loginHighlight h2 {
+        font-size: var(--font-size-xl);
+    }
+
+    .loginHighlight p {
+        font-size: var(--font-size-lg);
+    }
+
+    .loginForm h1 {
+        font-size: 1.8rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .loginHighlight h2 {
+        font-size: 2rem;
+    }
+
+    .loginHighlight p {
+        font-size: 1rem;
+    }
+
+    .loginHighlight ul li {
+        font-size: 0.95rem;
+    }
+
+    .loginForm h1 {
+        font-size: 1.5rem;
+    }
+
+    .primaryButton {
+        padding: 10px 18px;
+        font-size: 0.95rem;
+    }
+
+    .logo {
+        width: 120px;
+        margin-bottom: 20px;
+    }
+}

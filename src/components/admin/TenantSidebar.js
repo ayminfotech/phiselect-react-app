@@ -2,7 +2,8 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { useNavigate } from 'react-router-dom';
-import './TenantSidebar.css'; // Updated path
+import './TenantSidebar.css';
+import logo from '../../assets/PhiSelect.png'; // Adjust the path and file extension as needed
 
 const TenetSidebar = ({ activeItem, onMenuClick, onLogout }) => {
   const navigate = useNavigate();
@@ -10,6 +11,9 @@ const TenetSidebar = ({ activeItem, onMenuClick, onLogout }) => {
   const handleMenuClick = (item) => {
     onMenuClick(item);
     switch (item) {
+      case 'home':
+        navigate('/');
+        break;
       case 'tenets':
         navigate('/onboard');
         break;
@@ -25,10 +29,30 @@ const TenetSidebar = ({ activeItem, onMenuClick, onLogout }) => {
   return (
     <aside className="tenant-sidebar">
       <div className="tenant-sidebar__header">
-        <h2>ATS Admin</h2>
+        <img
+          src={logo}
+          alt="Company Logo"
+          className="tenant-sidebar__logo"
+          onClick={() => navigate('/')}
+          role="button"
+          tabIndex={0}
+          onKeyPress={(e) => e.key === 'Enter' && navigate('/')}
+        />
       </div>
       <nav className="tenant-sidebar__nav">
         <ul className="tenant-sidebar__menu">
+          <li
+            className={`tenant-sidebar__menu-item ${
+              activeItem === 'home' ? 'tenant-sidebar__menu-item--active' : ''
+            }`}
+            onClick={() => handleMenuClick('home')}
+            role="button"
+            tabIndex={0}
+            onKeyPress={(e) => e.key === 'Enter' && handleMenuClick('home')}
+          >
+            <i className="fas fa-home"></i>
+            <span>Home</span>
+          </li>
           <li
             className={`tenant-sidebar__menu-item ${
               activeItem === 'tenets' ? 'tenant-sidebar__menu-item--active' : ''

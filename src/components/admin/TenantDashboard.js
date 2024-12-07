@@ -1,63 +1,122 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext, useState, useEffect } from 'react';
 import { AuthContext } from '../auth/AuthContext';
-import ManagerPanel from '../../roles/ManagerPanel';
-import RecruiterPanel from '../../roles/RecruiterPanel';
-import AdminPanel from '../../roles/AdminPanel';
-import InterviewerPanel from '../../roles/InterviewerPanel';
+import { getOrganizationsByTenantId } from '../../services/TenantService';
 import './TenantDashboard.css';
+
+// Reusable Component for Stats Card
+const StatCard = ({ title, value, icon }) => (
+    <div className="stat-card">
+        <div className="icon">{icon}</div>
+        <div className="details">
+            <h3>{value}</h3>
+            <p>{title}</p>
+        </div>
+    </div>
+);
+
+// Role-Specific Panels
+const ManagerPanel = () => (
+    <div>
+        <h3>Manager Overview</h3>
+        <p>Total Team Members: 12</p>
+        <p>Active Job Posts: 8</p>
+        <p>Pending Approvals: 2</p>
+    </div>
+);
+
+const RecruiterPanel = () => (
+    <div>
+        <h3>Recruiter Dashboard</h3>
+        <p>Jobs Posted: 5</p>
+        <p>Applications Received: 150</p>
+        <p>Interviews Scheduled: 10</p>
+    </div>
+);
+
+const InterviewerPanel = () => (
+    <div>
+        <h3>Interviewer Tasks</h3>
+        <p>Assigned Interviews: 4</p>
+        <p>Pending Feedback: 2</p>
+        <p>Completed Interviews: 6</p>
+    </div>
+);
 
 const TenantDashboard = () => {
     const { auth } = useContext(AuthContext);
-    const { roles, permissions, tenantId } = auth || {};
-    const [activePanel, setActivePanel] = useState(null); // Track the selected panel
+    const { tenantId, roles } = auth || {};
+    const [tenantData, setTenantData] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
-    if (!auth) {
-        return <div>Loading... Please log in.</div>;
-    }
+    useEffect(() => {
+        const fetchTenantData = async () => {
+            setLoading(true);
+            try {
+                if (tenantId) {
+                    const data = await getOrganizationsByTenantId(tenantId);
+                    setTenantData(Array.isArray(data) ? data[0] : data);
+                } else {
+                    setError('No tenant ID found.');
+                }
+            } catch (err) {
+                setError('Failed to fetch tenant data.');
+            } finally {
+                setLoading(false);
+            }
+        };
 
-    const renderPanel = () => {
-        switch (activePanel) {
-            case 'MANAGER':
-                return <ManagerPanel permissions={permissions} />;
-            case 'RECRUITER':
-                return <RecruiterPanel permissions={permissions} />;
-            case 'ADMIN':
-                return <AdminPanel permissions={permissions} />;
-            case 'INTERVIEWER':
-                return <InterviewerPanel permissions={permissions} />;
-            default:
-                return <div>Select a panel to view details.</div>;
-        }
-    };
+        fetchTenantData();
+    }, [tenantId]);
+
+    if (loading) return <div className="loader">Loading tenant data...</div>;
+    if (error) return <div className="error">{error}</div>;
 
     return (
-        <div className="dashboard-container">
+        <div className="tenant-dashboard">
+            {/* Header Section */}
             <header className="dashboard-header">
-                <h1>{tenantId ? `${tenantId} Dashboard` : 'Tenant Dashboard'}</h1>
-                <p>Welcome, Tenant: <strong>{tenantId}</strong></p>
+                <h1>Welcome to {tenantData?.name || 'Tenant Dashboard'}</h1>
+                <p>Your tenant ID: <strong>{tenantData?.tenantId || 'N/A'}</strong></p>
             </header>
-            <div className="dashboard-content">
-                <aside className="dashboard-sidebar">
-                    <h2>Navigation</h2>
+
+            {/* Quick Stats */}
+            <section className="stats-section">
+                <StatCard title="Active Jobs" value={tenantData?.activeJobs || 5} icon="📋" />
+                <StatCard title="Applications Received" value={tenantData?.applications || 250} icon="📨" />
+                <StatCard title="Hires Made" value={tenantData?.hires || 10} icon="🎯" />
+                <StatCard title="Pending Interviews" value={tenantData?.interviews || 8} icon="🕒" />
+            </section>
+
+            {/* Role-Specific Data */}
+            <section className="role-specific-section">
+                {roles.includes('MANAGER') && <ManagerPanel />}
+                {roles.includes('RECRUITER') && <RecruiterPanel />}
+                {roles.includes('INTERVIEWER') && <InterviewerPanel />}
+            </section>
+
+            {/* Tenant Information */}
+            <section className="tenant-info-section">
+                <h2>Tenant Information</h2>
+                <p><strong>Name:</strong> {tenantData?.name}</p>
+                <p><strong>Industry:</strong> {tenantData?.industryType}</p>
+                <p><strong>Contact Email:</strong> {tenantData?.contactDetails?.email}</p>
+                <p><strong>Phone:</strong> {tenantData?.contactDetails?.phone}</p>
+            </section>
+
+            {/* Activity Logs */}
+            <section className="logs-section">
+                <h2>Recent Activity</h2>
+                {tenantData?.activityLogs?.length ? (
                     <ul>
-                        {roles.includes('MANAGER') && (
-                            <li onClick={() => setActivePanel('MANAGER')}>Manager Panel</li>
-                        )}
-                        {roles.includes('RECRUITER') && (
-                            <li onClick={() => setActivePanel('RECRUITER')}>Recruiter Panel</li>
-                        )}
-                        {roles.includes('ADMIN') && (
-                            <li onClick={() => setActivePanel('ADMIN')}>Admin Panel</li>
-                        )}
-                        {roles.includes('INTERVIEWER') && (
-                            <li onClick={() => setActivePanel('INTERVIEWER')}>Interviewer Panel</li>
-                        )}
+                        {tenantData.activityLogs.map((log, index) => (
+                            <li key={index}>{log}</li>
+                        ))}
                     </ul>
-                </aside>
-                <main className="dashboard-main">
-                    {renderPanel()}
-                </main>
-            </div>
+                ) : (
+                    <p>No recent activity found.</p>
+                )}
+            </section>
         </div>
     );
 };

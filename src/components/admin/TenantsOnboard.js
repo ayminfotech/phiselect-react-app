@@ -10,7 +10,9 @@ import {
 import { AuthContext } from '../auth/AuthContext';
 import TenetSidebar from './TenantSidebar';
 import TenetList from './TenantList';
-import './TenantsOnboard.css'; // Updated path
+import BackToHomeButton from './BackToHomeButton';
+import BackButton from './BackButton'; // Import BackButton
+import './TenantsOnboard.css';
 
 const TenantsOnboard = () => {
   const [tenants, setTenants] = useState([]);
@@ -98,10 +100,16 @@ const TenantsOnboard = () => {
       />
       <main className="tenants-onboard__content">
         <header className="tenants-onboard__header">
-          <h1>Manage Tenants</h1>
-          <button className="button button--primary" onClick={handleAddTenant}>
-            <i className="fas fa-plus"></i> Add Tenant
-          </button>
+          <div className="tenants-onboard__header-left">
+            <BackButton /> {/* Back Button */}
+            <h1>Manage Tenants</h1>
+          </div>
+          <div className="tenants-onboard__header-buttons">
+            <BackToHomeButton /> {/* Back to Home Button */}
+            <button className="button button--primary" onClick={handleAddTenant}>
+              <i className="fas fa-plus"></i> Add Tenant
+            </button>
+          </div>
         </header>
         <section className="tenants-onboard__list">
           <TenetList

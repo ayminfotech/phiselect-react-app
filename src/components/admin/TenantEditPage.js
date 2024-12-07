@@ -4,7 +4,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 import { getTenetById, updateTenet } from '../../services/TenantService';
-import './TenantEditPage.css';
+import BackButton from './BackButton'; // Import BackButton component
+import './TenantEditPage.css'; // Import corresponding CSS
 
 const TenantEditPage = () => {
   const navigate = useNavigate();
@@ -171,12 +172,15 @@ const TenantEditPage = () => {
   return (
     <div className="tenant-edit-page">
       <header className="tenant-edit-page__header">
-        <h2>Edit Tenant</h2>
+        <div className="tenant-edit-page__header-left">
+          <BackButton /> {/* BackButton Component */}
+          <h2>Edit Tenant</h2>
+        </div>
         <button
-          className="button button--secondary"
+          className="button button--secondary tenant-edit-page__back-button"
           onClick={() => navigate('/super-admin/tenants')}
         >
-          <i className="fas fa-arrow-left"></i> Back to Tenant List
+          <i className="fas fa-arrow-left" aria-hidden="true"></i> Back to Tenant List
         </button>
       </header>
 
@@ -432,19 +436,28 @@ const TenantEditPage = () => {
                 </div>
               )}
 
-              <button
-                type="submit"
-                className="button button--primary"
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? (
-                  <>
-                    <i className="fas fa-spinner fa-spin"></i> Saving...
-                  </>
-                ) : (
-                  'Save Changes'
-                )}
-              </button>
+              <div className="form-actions">
+                <button
+                  type="submit"
+                  className="button button--primary"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <i className="fas fa-spinner fa-spin"></i> Saving...
+                    </>
+                  ) : (
+                    'Save Changes'
+                  )}
+                </button>
+                <button
+                  type="button"
+                  className="button button--secondary"
+                  onClick={() => navigate('/super-admin/tenants')}
+                >
+                  <i className="fas fa-times"></i> Cancel
+                </button>
+              </div>
             </Form>
           )}
         </Formik>

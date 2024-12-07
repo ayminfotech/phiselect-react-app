@@ -64,7 +64,7 @@ const App = () => {
       <Route
         path="/tenant/:tenantId/dashboard"
         element={
-          <ProtectedRoute allowedRoles={['MANAGER']}>
+          <ProtectedRoute allowedRoles={['ADMIN']}>
             <TenantDashboard />
           </ProtectedRoute>
         }

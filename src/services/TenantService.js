@@ -114,7 +114,7 @@ export const deactivateTenet = async (id) => {
  */
 export const getOrganizationsByTenantId = async (tenantId) => {
   try {
-    const response = await api.get(`/tenants/${tenantId}/organizations`);
+    const response = await api.get(`/tenants/${tenantId}/organization`);
     return response.data;
   } catch (error) {
     throw error;

@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import ConfirmDialog from './ConfirmDialog';
-import './TenetList.css'; // Corrected CSS filename
+import './TenantList.css'; // Corrected CSS filename
 
 const TenantList = ({
   tenants,
@@ -31,7 +31,7 @@ const TenantList = ({
   };
 
   return (
-    <div className="tenant-list">
+    <div className="tenant-list-container">
       {showConfirm && (
         <ConfirmDialog
           title="Delete Tenant"
@@ -40,7 +40,7 @@ const TenantList = ({
           onCancel={handleCancelDelete}
         />
       )}
-      <table>
+      <table className="tenant-table">
         <thead>
           <tr>
             <th>Name</th>
@@ -49,46 +49,66 @@ const TenantList = ({
           </tr>
         </thead>
         <tbody>
-          {tenants.map((tenant) => (
-            <tr key={tenant.id}>
-              <td>{tenant.name}</td>
-              <td>{tenant.active === "true" ? "Active" : "Inactive"}</td>
-              <td className="actions">
-                {/* Edit Button - Pass id */}
-                <button
-                  className="action-button edit"
-                  onClick={() => onEditTenant(tenant.id)}
-                >
-                  Edit
-                </button>
-
-                {/* Delete Button */}
-                <button
-                  className="action-button delete"
-                  onClick={() => handleDeleteClick(tenant.id)}
-                >
-                  Delete
-                </button>
-
-                {/* Activate/Deactivate Button */}
-                {tenant.active === "true" ? (
-                  <button
-                    className="action-button deactivate"
-                    onClick={() => onDeactivateTenant(tenant.id)}
+          {tenants.length > 0 ? (
+            tenants.map((tenant) => (
+              <tr key={tenant.id}>
+                <td className="tenant-name">{tenant.name}</td>
+                <td>
+                  <span
+                    className={`status-badge ${
+                      tenant.active === "true" ? 'active' : 'inactive'
+                    }`}
                   >
-                    Deactivate
-                  </button>
-                ) : (
+                    {tenant.active === "true" ? 'Active' : 'Inactive'}
+                  </span>
+                </td>
+                <td className="actions-cell">
+                  {/* Edit Button */}
                   <button
-                    className="action-button activate"
-                    onClick={() => onActivateTenant(tenant.id)}
+                    className="action-button edit-button"
+                    onClick={() => onEditTenant(tenant.id)}
+                    aria-label={`Edit ${tenant.name}`}
                   >
-                    Activate
+                    <i className="fas fa-edit"></i> Edit
                   </button>
-                )}
+
+                  {/* Delete Button */}
+                  <button
+                    className="action-button delete-button"
+                    onClick={() => handleDeleteClick(tenant.id)}
+                    aria-label={`Delete ${tenant.name}`}
+                  >
+                    <i className="fas fa-trash-alt"></i> Delete
+                  </button>
+
+                  {/* Activate/Deactivate Button */}
+                  {tenant.active === "true" ? (
+                    <button
+                      className="action-button deactivate-button"
+                      onClick={() => onDeactivateTenant(tenant.id)}
+                      aria-label={`Deactivate ${tenant.name}`}
+                    >
+                      <i className="fas fa-times-circle"></i> Deactivate
+                    </button>
+                  ) : (
+                    <button
+                      className="action-button activate-button"
+                      onClick={() => onActivateTenant(tenant.id)}
+                      aria-label={`Activate ${tenant.name}`}
+                    >
+                      <i className="fas fa-check-circle"></i> Activate
+                    </button>
+                  )}
+                </td>
+              </tr>
+            ))
+          ) : (
+            <tr>
+              <td colSpan="3" className="no-data">
+                No tenants available. Click "Add Tenant" to get started.
               </td>
             </tr>
-          ))}
+          )}
         </tbody>
       </table>
     </div>
