@@ -1,122 +1,228 @@
-import React, { useContext, useState, useEffect } from 'react';
-import { AuthContext } from '../auth/AuthContext';
-import { getOrganizationsByTenantId } from '../../services/TenantService';
+import React, { useState } from 'react';
 import './TenantDashboard.css';
 
-// Reusable Component for Stats Card
-const StatCard = ({ title, value, icon }) => (
-    <div className="stat-card">
-        <div className="icon">{icon}</div>
-        <div className="details">
-            <h3>{value}</h3>
-            <p>{title}</p>
-        </div>
-    </div>
-);
+// Dummy Data
+const stats = [
+    { title: 'Active Jobs', value: 8, icon: '📋' },
+    { title: 'Applications Received', value: 250, icon: '📨' },
+    { title: 'Hires Made', value: 15, icon: '🎯' },
+    { title: 'Pending Interviews', value: 12, icon: '🕒' },
+];
 
-// Role-Specific Panels
-const ManagerPanel = () => (
-    <div>
-        <h3>Manager Overview</h3>
-        <p>Total Team Members: 12</p>
-        <p>Active Job Posts: 8</p>
-        <p>Pending Approvals: 2</p>
-    </div>
-);
+const roleColors = {
+    Admin: '#3498db', // Blue
+    Manager: '#27ae60', // Green
+    Recruiter: '#f39c12', // Gold
+    Interviewer: '#e74c3c', // Coral
+};
 
-const RecruiterPanel = () => (
-    <div>
-        <h3>Recruiter Dashboard</h3>
-        <p>Jobs Posted: 5</p>
-        <p>Applications Received: 150</p>
-        <p>Interviews Scheduled: 10</p>
-    </div>
-);
+const jobPosts = [
+    { jobTitle: 'Software Developer', status: 'Open', assignedTo: 'John Doe' },
+    { jobTitle: 'Product Manager', status: 'Filled', assignedTo: 'Jane Smith' },
+];
 
-const InterviewerPanel = () => (
-    <div>
-        <h3>Interviewer Tasks</h3>
-        <p>Assigned Interviews: 4</p>
-        <p>Pending Feedback: 2</p>
-        <p>Completed Interviews: 6</p>
-    </div>
-);
+const candidates = [
+    { name: 'John Doe', position: 'Software Developer', status: 'Interview Scheduled' },
+    { name: 'Jane Smith', position: 'Product Manager', status: 'Pending' },
+    { name: 'Sam Brown', position: 'HR Specialist', status: 'Applied' },
+];
+
+const feedback = [
+    { candidate: 'John Doe', interviewDate: '2023-11-12', feedback: 'Strong technical skills.' },
+    { candidate: 'Jane Smith', interviewDate: '2023-11-13', feedback: 'Good leadership, needs tech improvement.' },
+];
+
+// Users Data (for admin to manage)
+const usersData = [
+    { name: 'Admin User', role: 'Admin', status: 'Active' },
+    { name: 'John Doe', role: 'Manager', status: 'Active' },
+    { name: 'Jane Smith', role: 'Recruiter', status: 'Active' },
+    { name: 'Sam Brown', role: 'Interviewer', status: 'Inactive' },
+];
 
 const TenantDashboard = () => {
-    const { auth } = useContext(AuthContext);
-    const { tenantId, roles } = auth || {};
-    const [tenantData, setTenantData] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
+    const [activeNav, setActiveNav] = useState('Dashboard');
+    const [activeRole, setActiveRole] = useState('Admin');
+    const [users, setUsers] = useState(usersData); // User data state
+    const [newUserName, setNewUserName] = useState('');
+    const [newUserRole, setNewUserRole] = useState('Manager');
 
-    useEffect(() => {
-        const fetchTenantData = async () => {
-            setLoading(true);
-            try {
-                if (tenantId) {
-                    const data = await getOrganizationsByTenantId(tenantId);
-                    setTenantData(Array.isArray(data) ? data[0] : data);
-                } else {
-                    setError('No tenant ID found.');
-                }
-            } catch (err) {
-                setError('Failed to fetch tenant data.');
-            } finally {
-                setLoading(false);
-            }
+    // Add a new user to the users array
+    const createUser = () => {
+        const newUser = {
+            name: newUserName,
+            role: newUserRole,
+            status: 'Active',
         };
+        setUsers([...users, newUser]);
+        setNewUserName('');
+    };
 
-        fetchTenantData();
-    }, [tenantId]);
+    // Toggle user status (Active/Inactive)
+    const toggleUserStatus = (name) => {
+        const updatedUsers = users.map((user) =>
+            user.name === name ? { ...user, status: user.status === 'Active' ? 'Inactive' : 'Active' } : user
+        );
+        setUsers(updatedUsers);
+    };
 
-    if (loading) return <div className="loader">Loading tenant data...</div>;
-    if (error) return <div className="error">{error}</div>;
+    const renderRoleContent = () => {
+        switch (activeRole) {
+            case 'Admin':
+                return (
+                    <div>
+                        <h3 style={{ color: roleColors.Admin }}>Admin Panel</h3>
+                        <h4>Users Management</h4>
+                        <div className="user-management">
+                            <div>
+                                <h4>Create User</h4>
+                                <input
+                                    type="text"
+                                    value={newUserName}
+                                    onChange={(e) => setNewUserName(e.target.value)}
+                                    placeholder="Enter new user name"
+                                />
+                                <select
+                                    value={newUserRole}
+                                    onChange={(e) => setNewUserRole(e.target.value)}
+                                >
+                                    <option value="Manager">Manager</option>
+                                    <option value="Recruiter">Recruiter</option>
+                                    <option value="Interviewer">Interviewer</option>
+                                    <option value="Admin">Admin</option>
+                                </select>
+                                <button className="action-btn" onClick={createUser}>Create User</button>
+                            </div>
+
+                            <h4>All Users</h4>
+                            <ul>
+                                {users.map((user, index) => (
+                                    <li key={index}>
+                                        {user.name} - {user.role} - {user.status}
+                                        <button className="action-btn" onClick={() => toggleUserStatus(user.name)}>
+                                            {user.status === 'Active' ? 'Deactivate' : 'Activate'}
+                                        </button>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+
+                        <h4>Job Posts</h4>
+                        <ul>
+                            {jobPosts.map((job, index) => (
+                                <li key={index}>
+                                    {job.jobTitle} - {job.status} (Assigned to: {job.assignedTo || 'Unassigned'})
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                );
+            case 'Manager':
+                return (
+                    <div>
+                        <h3 style={{ color: roleColors.Manager }}>Manager Panel</h3>
+                        <button className="create-job-btn">Create Job Post</button>
+                        <h4>Job Posts</h4>
+                        <ul>
+                            {jobPosts.map((job, index) => (
+                                <li key={index}>
+                                    {job.jobTitle} - {job.status}
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                );
+            case 'Recruiter':
+                return (
+                    <div>
+                        <h3 style={{ color: roleColors.Recruiter }}>Recruiter Panel</h3>
+                        <button className="action-btn">Source Candidates</button>
+                        <h4>Candidates</h4>
+                        <ul>
+                            {candidates.map((candidate, index) => (
+                                <li key={index}>
+                                    {candidate.name} - {candidate.position} - {candidate.status}
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                );
+            case 'Interviewer':
+                return (
+                    <div>
+                        <h3 style={{ color: roleColors.Interviewer }}>Interviewer Panel</h3>
+                        <button className="action-btn">Provide Feedback</button>
+                        <h4>Feedback</h4>
+                        <ul>
+                            {feedback.map((fb, index) => (
+                                <li key={index}>
+                                    {fb.candidate} - {fb.interviewDate} - {fb.feedback}
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                );
+            default:
+                return <div>Select a role to view its dashboard.</div>;
+        }
+    };
 
     return (
         <div className="tenant-dashboard">
-            {/* Header Section */}
+            {/* Navigation */}
+            <nav className="main-navigation">
+                <ul>
+                    {['Dashboard', 'Jobs', 'Candidates', 'Settings'].map((item) => (
+                        <li
+                            key={item}
+                            className={activeNav === item ? 'active' : ''}
+                            onClick={() => setActiveNav(item)}
+                        >
+                            {item}
+                        </li>
+                    ))}
+                </ul>
+            </nav>
+
+            {/* Header */}
             <header className="dashboard-header">
-                <h1>Welcome to {tenantData?.name || 'Tenant Dashboard'}</h1>
-                <p>Your tenant ID: <strong>{tenantData?.tenantId || 'N/A'}</strong></p>
+                <h1>Welcome to Your ATS Dashboard</h1>
+                <p>Streamline your recruitment process with ease.</p>
             </header>
 
-            {/* Quick Stats */}
+            {/* Stats Section */}
             <section className="stats-section">
-                <StatCard title="Active Jobs" value={tenantData?.activeJobs || 5} icon="📋" />
-                <StatCard title="Applications Received" value={tenantData?.applications || 250} icon="📨" />
-                <StatCard title="Hires Made" value={tenantData?.hires || 10} icon="🎯" />
-                <StatCard title="Pending Interviews" value={tenantData?.interviews || 8} icon="🕒" />
+                {stats.map((stat, index) => (
+                    <div key={index} className="stat-card">
+                        <div className="icon">{stat.icon}</div>
+                        <div className="details">
+                            <h3>{stat.value}</h3>
+                            <p>{stat.title}</p>
+                        </div>
+                    </div>
+                ))}
             </section>
 
-            {/* Role-Specific Data */}
-            <section className="role-specific-section">
-                {roles.includes('MANAGER') && <ManagerPanel />}
-                {roles.includes('RECRUITER') && <RecruiterPanel />}
-                {roles.includes('INTERVIEWER') && <InterviewerPanel />}
-            </section>
+            {/* Role Tabs */}
+            <div className="role-tabs">
+                {['Admin', 'Manager', 'Recruiter', 'Interviewer'].map((role) => (
+                    <button
+                        key={role}
+                        className={activeRole === role ? 'active' : ''}
+                        style={{
+                            borderColor: roleColors[role],
+                            color: activeRole === role ? '#fff' : roleColors[role],
+                            backgroundColor: activeRole === role ? roleColors[role] : 'transparent',
+                        }}
+                        onClick={() => setActiveRole(role)}
+                    >
+                        {role}
+                    </button>
+                ))}
+            </div>
 
-            {/* Tenant Information */}
-            <section className="tenant-info-section">
-                <h2>Tenant Information</h2>
-                <p><strong>Name:</strong> {tenantData?.name}</p>
-                <p><strong>Industry:</strong> {tenantData?.industryType}</p>
-                <p><strong>Contact Email:</strong> {tenantData?.contactDetails?.email}</p>
-                <p><strong>Phone:</strong> {tenantData?.contactDetails?.phone}</p>
-            </section>
-
-            {/* Activity Logs */}
-            <section className="logs-section">
-                <h2>Recent Activity</h2>
-                {tenantData?.activityLogs?.length ? (
-                    <ul>
-                        {tenantData.activityLogs.map((log, index) => (
-                            <li key={index}>{log}</li>
-                        ))}
-                    </ul>
-                ) : (
-                    <p>No recent activity found.</p>
-                )}
-            </section>
+            {/* Role-Specific Content */}
+            <section className="role-content">{renderRoleContent()}</section>
         </div>
     );
 };

@@ -1,96 +1,309 @@
 /* Root Variables */
 :root {
-    --color-primary: #007bff;
-    --color-secondary: #f8f9fa;
-    --color-gray: #6c757d;
-    --color-light: #ffffff;
-    --color-accent: #e83e8c;
-    --font-family: 'Roboto', sans-serif;
-    --border-radius: 8px;
-    --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    --color-primary: #333; /* Soft dark for text */
+    --color-secondary: #f7f7f7; /* Light gray for backgrounds */
+    --color-accent: #ff6f61; /* Coral accent for action */
+    --color-muted: #999; /* Muted text color */
+    --color-light: #ffffff; /* Pure white for content */
+    --font-family: 'Helvetica Neue', Arial, sans-serif; /* Steve Jobs-inspired clean font */
+    --border-radius: 12px;
+    --box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15); /* Elevated shadow for better contrast */
+    --transition: 0.3s ease-in-out;
+    --font-size-base: 16px;
+    --font-size-heading: 2.2rem;
+    --font-size-subheading: 1.5rem;
+    --line-height: 1.6;
 }
 
-/* General Layout */
+/* Body */
+body {
+    margin: 0;
+    font-family: var(--font-family);
+    background: var(--color-secondary);
+    color: var(--color-primary);
+    line-height: var(--line-height);
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+/* Container */
 .tenant-dashboard {
     max-width: 1200px;
     margin: auto;
     padding: 20px;
-    font-family: var(--font-family);
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
 }
 
-/* Header Section */
-.dashboard-header {
-    background: var(--color-primary);
-    color: var(--color-light);
+/* Navigation */
+.main-navigation {
+    background: var(--color-light);
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    padding: 15px;
+    margin-bottom: 20px;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+.main-navigation ul {
+    list-style: none;
+    display: flex;
+    justify-content: space-around;
+    padding: 0;
+    margin: 0;
+}
+
+.main-navigation ul li {
+    padding: 15px 20px;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: background var(--transition), color var(--transition), transform var(--transition);
+    font-size: 1rem;
     text-align: center;
-    padding: 30px 20px;
+    color: var(--color-muted);
+}
+
+/* Active Navigation Link */
+.main-navigation ul li.active {
+    background: var(--color-accent);
+    color: var(--color-light);
+    font-weight: bold;
+}
+
+/* Hover Effect for Navigation */
+.main-navigation ul li:hover {
+    background: var(--color-accent);
+    color: var(--color-light);
+    transform: scale(1.05);
+}
+
+/* Header */
+.dashboard-header {
+    text-align: center;
+    color: var(--color-primary);
+    padding: 50px 20px;
+    background: var(--color-light);
     border-radius: var(--border-radius);
     margin-bottom: 20px;
+    box-shadow: var(--box-shadow);
+    background: linear-gradient(135deg, #ffffff, #f0f0f0);
 }
 
 .dashboard-header h1 {
-    font-size: 2rem;
+    font-size: var(--font-size-heading);
     margin: 0;
+    font-weight: bold;
+    letter-spacing: 0.5px;
 }
 
 .dashboard-header p {
     font-size: 1rem;
-    margin: 5px 0 0;
+    margin: 10px 0 0;
+    color: var(--color-muted);
 }
 
 /* Stats Section */
 .stats-section {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     gap: 20px;
-    margin-bottom: 20px;
 }
 
 .stat-card {
     background: var(--color-light);
+    text-align: center;
     padding: 20px;
     border-radius: var(--border-radius);
-    box-shadow: var(--shadow);
-    text-align: center;
-    transition: transform 0.3s ease;
+    box-shadow: var(--box-shadow);
+    transition: transform var(--transition), box-shadow var(--transition), background var(--transition);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
 }
 
+/* Hover Effect for Stats Cards */
 .stat-card:hover {
     transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    background: var(--color-secondary);
 }
 
+/* Stat Icons */
 .stat-card .icon {
-    font-size: 2rem;
+    font-size: 3rem;
     margin-bottom: 10px;
+    color: var(--color-muted);
+    transition: color var(--transition);
+}
+
+/* Hover Effect for Stat Icons */
+.stat-card:hover .icon {
+    color: var(--color-accent);
 }
 
 .stat-card .details h3 {
     margin: 0;
+    font-size: 1.8rem;
     color: var(--color-primary);
 }
 
 .stat-card .details p {
     margin: 5px 0 0;
-    color: var(--color-gray);
+    font-size: 1rem;
+    color: var(--color-muted);
 }
 
-/* Role-Specific Section */
-.role-specific-section {
-    margin-bottom: 20px;
+/* Role Tabs */
+.role-tabs {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin: 20px 0;
 }
 
-/* Tenant Information Section */
-.tenant-info-section,
-.logs-section {
-    background: var(--color-light);
-    padding: 20px;
+/* Role Button */
+.role-tabs button {
+    background: var(--color-secondary);
+    border: 2px solid var(--color-muted);
+    padding: 12px 25px;
     border-radius: var(--border-radius);
-    box-shadow: var(--shadow);
-    margin-bottom: 20px;
+    cursor: pointer;
+    transition: background var(--transition), color var(--transition), transform var(--transition);
+    font-size: 1rem;
+    text-transform: uppercase;
+    font-weight: bold;
+    color: var(--color-muted);
 }
 
-.tenant-info-section h2,
-.logs-section h2 {
-    margin-bottom: 15px;
+/* Active Role Button */
+.role-tabs button.active {
+    background: var(--color-accent);
+    color: var(--color-light);
+    transform: scale(1.1);
+}
+
+/* Hover Effect for Role Buttons */
+.role-tabs button:hover {
+    background: var(--color-accent);
+    color: var(--color-light);
+    transform: scale(1.05);
+}
+
+/* Role Content */
+.role-content {
+    background: var(--color-light);
+    padding: 40px;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    margin-bottom: 20px;
+    transition: background var(--transition), transform var(--transition);
+    text-align: center;
+}
+
+.role-content h3 {
+    font-size: 2rem;
+    margin-bottom: 30px;
+    font-weight: bold;
     color: var(--color-primary);
+}
+
+.role-content ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+/* Hover Effect for List Items */
+.role-content ul li {
+    padding: 18px;
+    margin-bottom: 15px;
+    background: var(--color-secondary);
+    border-radius: var(--border-radius);
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: var(--color-primary);
+    transition: background var(--transition), color var(--transition), transform var(--transition);
+}
+
+/* Hover Effect for List Items */
+.role-content ul li:hover {
+    background: var(--color-accent);
+    color: var(--color-light);
+    transform: translateY(-3px);
+}
+
+/* User Management Section */
+.user-management {
+    margin-bottom: 30px;
+}
+
+.user-management h4 {
+    font-size: 1.6rem;
+    margin-bottom: 10px;
+    color: var(--color-primary);
+}
+
+.user-management input {
+    padding: 8px 12px;
+    margin-right: 10px;
+    border-radius: var(--border-radius);
+    border: 1px solid var(--color-muted);
+    font-size: 1rem;
+    width: 200px;
+}
+
+.user-management select {
+    padding: 8px 12px;
+    margin-right: 10px;
+    border-radius: var(--border-radius);
+    border: 1px solid var(--color-muted);
+    font-size: 1rem;
+}
+
+.user-management button {
+    padding: 10px 20px;
+    background-color: var(--color-accent);
+    color: #fff;
+    border: none;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+}
+
+.user-management button:hover {
+    background-color: #e74c3c;
+}
+
+.user-management ul {
+    list-style: none;
+    padding: 0;
+}
+
+.user-management ul li {
+    background: var(--color-light);
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: var(--border-radius);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.user-management ul li button {
+    background-color: var(--color-accent);
+    padding: 5px 10px;
+    font-size: 1rem;
+    border: none;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+}
+
+.user-management ul li button:hover {
+    background-color: #e74c3c;
 }
