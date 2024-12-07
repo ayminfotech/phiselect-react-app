@@ -10,6 +10,7 @@ import TenantDashboard from './components/admin/TenantDashboard';
 import TenantReports from './components/admin/TenetReports'; // New
 import ProtectedRoute from './components/common/ProtectedRoute';
 import { AuthProvider } from './components/auth/AuthContext';
+import TenantsListPage from './components/admin/TenantsListPage';
 
 const App = () => {
   return (
@@ -28,8 +29,17 @@ const App = () => {
             </ProtectedRoute>
           }
         />
+       <Route
+          path="/super-admin/tenants"
+          element={
+            <ProtectedRoute allowedRoles={['SUPER_ADMIN']}>
+              <TenantsListPage /> {/* Ensure this component exists */}
+            </ProtectedRoute>
+          }
+        />
+
         <Route
-          path="/super-admin/tenets/add"
+          path="/super-admin/tenants/add"
           element={
             <ProtectedRoute allowedRoles={['SUPER_ADMIN']}>
               <TenantAddPage />
@@ -37,7 +47,7 @@ const App = () => {
           }
         />
         <Route
-          path="/super-admin/tenets/:tenantId/edit"
+          path="/super-admin/tenants/:id/edit"
           element={
             <ProtectedRoute allowedRoles={['SUPER_ADMIN']}>
               <TenantEditPage />

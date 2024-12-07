@@ -1,7 +1,7 @@
 // src/services/TenetService.js
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:8380'; // Adjust as needed
+const API_BASE_URL = 'http://localhost:8380/api'; // Ensure this matches your backend's base URL
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -24,90 +24,171 @@ api.interceptors.request.use(
 );
 
 /**
- * Get all tenets (organizations)
+ * 1. Get All Organizations
+ * GET /api/organizations
  */
 export const getAllTenets = async () => {
-  return (await api.get('/organizations')).data;
+  try {
+    const response = await api.get('/organizations');
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
 };
 
 /**
- * Register a new tenet (organization)
- * @param {Object} tenetData - Data for the new tenet
+ * 2. Register a New Organization
+ * POST /api/register
+ * @param {Object} organizationData - Data for the new organization
  */
-export const createTenet = async (tenetData) => {
-  return (await api.post('/register', tenetData)).data;
+export const createTenet = async (organizationData) => {
+  try {
+    const response = await api.post('/register', organizationData);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
 };
 
 /**
- * Update tenet details
- * @param {String} tenantId - ID of the tenant
- * @param {Number} tenetId - ID of the tenet to update
- * @param {Object} tenetData - Updated data for the tenet
+ * 3. Update Organization Details
+ * PUT /api/organizations/{id}
+ * @param {String} id - UUID of the organization to update
+ * @param {Object} organizationData - Updated data for the organization
  */
-export const updateTenet = async (tenantId, tenetId, tenetData) => {
-  return (await api.put(`/${tenantId}/${tenetId}`, tenetData)).data;
+export const updateTenet = async (id, organizationData) => {
+  try {
+    const response = await api.put(`/organizations/${id}`, organizationData);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
 };
 
 /**
- * Delete a tenet
- * @param {String} tenantId - ID of the tenant
- * @param {Number} tenetId - ID of the tenet to delete
+ * 4. Delete an Organization
+ * DELETE /api/organizations/{id}
+ * @param {String} id - UUID of the organization to delete
  */
-export const deleteTenet = async (tenantId, tenetId) => {
-  return (await api.delete(`/${tenantId}/${tenetId}`)).data;
+export const deleteTenet = async (id) => {
+  try {
+    const response = await api.delete(`/organizations/${id}`);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
 };
 
 /**
- * Activate a tenet
- * @param {String} tenantId - ID of the tenant
- * @param {String} organizationRefId - Reference ID of the organization
+ * 5. Activate an Organization
+ * POST /api/organizations/{id}/activate
+ * @param {String} id - UUID of the organization to activate
  */
-export const activateTenet = async (tenantId, organizationRefId) => {
-  return (await api.post(`/${tenantId}/${organizationRefId}/activate`)).data;
+export const activateTenet = async (id) => {
+  try {
+    const response = await api.post(`/organizations/${id}/activate`);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
 };
 
 /**
- * Deactivate a tenet
- * @param {String} tenantId - ID of the tenant
- * @param {String} organizationRefId - Reference ID of the organization
+ * 6. Deactivate an Organization
+ * POST /api/organizations/{id}/deactivate
+ * @param {String} id - UUID of the organization to deactivate
  */
-export const deactivateTenet = async (tenantId, organizationRefId) => {
-  return (await api.post(`/${tenantId}/${organizationRefId}/deactivate`)).data;
+export const deactivateTenet = async (id) => {
+  try {
+    const response = await api.post(`/organizations/${id}/deactivate`);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
 };
 
 /**
- * Get tenet by ID
- * @param {String} tenantId - ID of the tenant
- * @param {Number} tenetId - ID of the tenet
+ * 7. Get Organizations by Tenant ID
+ * GET /api/tenants/{tenantId}/organizations
+ * @param {String} tenantId - UUID of the tenant
  */
-export const getTenetById = async (tenantId, tenetId) => {
-  return (await api.get(`/${tenantId}/${tenetId}`)).data;
+export const getOrganizationsByTenantId = async (tenantId) => {
+  try {
+    const response = await api.get(`/tenants/${tenantId}/organizations`);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
 };
 
 /**
- * Get tenet reports (dummy data)
+ * 8. Get Organization by ID
+ * GET /api/organizations/{id}
+ * @param {String} id - UUID of the organization
  */
-export const getTenetReports = async () => {
-  // If your backend API is ready, uncomment the following line:
-  // return (await api.get('/organizations/reports')).data;
+export const getTenetById = async (id) => {
+  try {
+    const response = await api.get(`/organizations/${id}`);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
 
-  // Dummy data implementation for testing purposes:
-  return [
-    {
-      id: 1,
-      title: 'Monthly Sales Report',
-      summary: 'Summary of monthly sales.',
-    },
-    {
-      id: 2,
-      title: 'User Activity Report',
-      summary: 'Summary of user activities.',
-    },
-    {
-      id: 3,
-      title: 'System Performance Report',
-      summary: 'Summary of system performance.',
-    },
-    // Add more dummy reports as needed
-  ];
+/**
+ * 9. Get Organization by Tenant ID and Organization ID
+ * GET /api/tenants/{tenantId}/organizations/{id}
+ * @param {String} tenantId - UUID of the tenant
+ * @param {String} id - UUID of the organization
+ */
+export const getOrganizationByTenantAndId = async (tenantId, id) => {
+  try {
+    const response = await api.get(`/tenants/${tenantId}/organizations/${id}`);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+/**
+ * 10. Get Organization Reports
+ * GET /api/organizations/{id}/reports
+ * 
+ * Note: Since the backend API is not ready yet, this function returns dummy data.
+ * Once the backend is ready, uncomment the API call and remove the dummy data.
+ * 
+ * @param {String} id - UUID of the organization
+ * @returns {Array} - Array of report objects
+ */
+export const getTenetReports = async (id) => {
+  try {
+    // Uncomment the following lines when your backend API is ready
+    // const response = await api.get(`/organizations/${id}/reports`);
+    // return response.data;
+
+    // Dummy data implementation for testing purposes:
+    return [
+      {
+        id: 'report-1',
+        title: 'Monthly Sales Report',
+        summary: 'Detailed summary of monthly sales for the organization.',
+        date: '2024-11-01',
+      },
+      {
+        id: 'report-2',
+        title: 'User Activity Report',
+        summary: 'Overview of user activities within the organization.',
+        date: '2024-11-15',
+      },
+      {
+        id: 'report-3',
+        title: 'System Performance Report',
+        summary: 'Analysis of system performance metrics.',
+        date: '2024-12-01',
+      },
+      // Add more dummy reports as needed
+    ];
+  } catch (error) {
+    throw error;
+  }
 };

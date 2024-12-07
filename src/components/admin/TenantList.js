@@ -1,46 +1,41 @@
-// src/components/admin/TenetList.js
+// src/components/admin/TenantList.js
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
-import { useNavigate } from 'react-router-dom';
 import ConfirmDialog from './ConfirmDialog';
-import './TenetList.css';
+import './TenetList.css'; // Corrected CSS filename
 
-const TenetList = ({
-  tenets,
-  onDeleteTenet,
-  onActivateTenet,
-  onDeactivateTenet,
+const TenantList = ({
+  tenants,
+  onEditTenant,
+  onDeleteTenant,
+  onActivateTenant,
+  onDeactivateTenant,
 }) => {
-  const navigate = useNavigate();
   const [showConfirm, setShowConfirm] = useState(false);
-  const [tenetToDelete, setTenetToDelete] = useState(null);
+  const [tenantToDelete, setTenantToDelete] = useState(null);
 
-  const handleEditTenet = (tenetId) => {
-    navigate(`/super-admin/tenets/${tenetId}/edit`);
-  };
-
-  const handleDeleteClick = (tenetId) => {
-    setTenetToDelete(tenetId);
+  const handleDeleteClick = (tenantId) => {
+    setTenantToDelete(tenantId);
     setShowConfirm(true);
   };
 
   const handleConfirmDelete = () => {
-    onDeleteTenet(tenetToDelete);
+    onDeleteTenant(tenantToDelete);
     setShowConfirm(false);
-    setTenetToDelete(null);
+    setTenantToDelete(null);
   };
 
   const handleCancelDelete = () => {
     setShowConfirm(false);
-    setTenetToDelete(null);
+    setTenantToDelete(null);
   };
 
   return (
-    <div className="tenet-list">
+    <div className="tenant-list">
       {showConfirm && (
         <ConfirmDialog
-          title="Delete Tenet"
-          message="Are you sure you want to delete this tenet? This action cannot be undone."
+          title="Delete Tenant"
+          message="Are you sure you want to delete this tenant? This action cannot be undone."
           onConfirm={handleConfirmDelete}
           onCancel={handleCancelDelete}
         />
@@ -54,31 +49,39 @@ const TenetList = ({
           </tr>
         </thead>
         <tbody>
-          {tenets.map((tenet) => (
-            <tr key={tenet.id}>
-              <td>{tenet.name}</td>
-              <td>{tenet.status}</td>
+          {tenants.map((tenant) => (
+            <tr key={tenant.id}>
+              <td>{tenant.name}</td>
+              <td>{tenant.active === "true" ? "Active" : "Inactive"}</td>
               <td className="actions">
-                <button className="edit" onClick={() => handleEditTenet(tenet.id)}>
+                {/* Edit Button - Pass id */}
+                <button
+                  className="action-button edit"
+                  onClick={() => onEditTenant(tenant.id)}
+                >
                   Edit
                 </button>
+
+                {/* Delete Button */}
                 <button
-                  className="delete"
-                  onClick={() => handleDeleteClick(tenet.id)}
+                  className="action-button delete"
+                  onClick={() => handleDeleteClick(tenant.id)}
                 >
                   Delete
                 </button>
-                {tenet.status === 'Active' ? (
+
+                {/* Activate/Deactivate Button */}
+                {tenant.active === "true" ? (
                   <button
-                    className="deactivate"
-                    onClick={() => onDeactivateTenet(tenet.id)}
+                    className="action-button deactivate"
+                    onClick={() => onDeactivateTenant(tenant.id)}
                   >
                     Deactivate
                   </button>
                 ) : (
                   <button
-                    className="activate"
-                    onClick={() => onActivateTenet(tenet.id)}
+                    className="action-button activate"
+                    onClick={() => onActivateTenant(tenant.id)}
                   >
                     Activate
                   </button>
@@ -92,11 +95,19 @@ const TenetList = ({
   );
 };
 
-TenetList.propTypes = {
-  tenets: PropTypes.array.isRequired,
-  onDeleteTenet: PropTypes.func.isRequired,
-  onActivateTenet: PropTypes.func.isRequired,
-  onDeactivateTenet: PropTypes.func.isRequired,
+TenantList.propTypes = {
+  tenants: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.string.isRequired,
+      name: PropTypes.string.isRequired,
+      active: PropTypes.string.isRequired, // Assuming 'active' is a string based on your data
+      // Add other tenant properties as needed
+    })
+  ).isRequired,
+  onEditTenant: PropTypes.func.isRequired,
+  onDeleteTenant: PropTypes.func.isRequired,
+  onActivateTenant: PropTypes.func.isRequired,
+  onDeactivateTenant: PropTypes.func.isRequired,
 };
 
-export default TenetList;
+export default TenantList;

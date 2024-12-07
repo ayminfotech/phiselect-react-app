@@ -6,7 +6,7 @@ import {
   deleteTenet,
   activateTenet,
   deactivateTenet,
-} from '../../services/TenantService';
+} from '../../services/TenantService'; // Corrected import: handleEditTenant removed
 import { AuthContext } from '../auth/AuthContext';
 import TenetSidebar from './TenantSidebar';
 import TenetList from './TenantList';
@@ -22,19 +22,41 @@ const TenetsOnboard = () => {
     const fetchTenets = async () => {
       try {
         const data = await getAllTenets();
+        console.log('Fetched Tenets:', data); // Debugging line
         setTenets(data);
       } catch (error) {
         console.error('Error fetching tenets:', error);
+        alert('Failed to fetch tenets. Please try again later.');
       }
     };
     fetchTenets();
   }, []);
 
   const handleAddTenet = () => {
-    navigate('/super-admin/tenets/add');
+    navigate('/super-admin/tenants/add');
   };
 
+  /**
+    * Handles navigation to the Edit Tenet page using id.
+    * @param {String} id - UUID of the organization.
+    */
+  const handleEditTenant = (id) => {
+    if (!id) {
+      console.error('Invalid organization id:', id);
+      alert('Cannot navigate to edit page. Invalid organization ID.');
+      return;
+    }
+    console.log('Navigating to edit tenant with Organization ID:', id);
+    navigate(`/super-admin/tenants/${id}/edit`);
+  };
+
+  /**
+   * Handles deletion of a tenet.
+   * @param {String} tenetId - ID of the tenet to delete.
+   */
   const handleDeleteTenet = async (tenetId) => {
+    if (!window.confirm('Are you sure you want to delete this tenet?')) return;
+
     try {
       await deleteTenet(tenetId);
       setTenets((prev) => prev.filter((t) => t.id !== tenetId));
@@ -45,12 +67,16 @@ const TenetsOnboard = () => {
     }
   };
 
+  /**
+   * Handles activation of a tenet.
+   * @param {String} tenetId - ID of the tenet to activate.
+   */
   const handleActivateTenet = async (tenetId) => {
     try {
       await activateTenet(tenetId);
       setTenets((prev) =>
         prev.map((t) =>
-          t.id === tenetId ? { ...t, status: 'Active' } : t
+          t.id === tenetId ? { ...t, active: 'true' } : t
         )
       );
       alert('Tenet activated successfully.');
@@ -60,12 +86,16 @@ const TenetsOnboard = () => {
     }
   };
 
+  /**
+   * Handles deactivation of a tenet.
+   * @param {String} tenetId - ID of the tenet to deactivate.
+   */
   const handleDeactivateTenet = async (tenetId) => {
     try {
       await deactivateTenet(tenetId);
       setTenets((prev) =>
         prev.map((t) =>
-          t.id === tenetId ? { ...t, status: 'Inactive' } : t
+          t.id === tenetId ? { ...t, active: 'false' } : t
         )
       );
       alert('Tenet deactivated successfully.');
@@ -91,10 +121,11 @@ const TenetsOnboard = () => {
         </header>
         <section className="tenet-list-container">
           <TenetList
-            tenets={tenets}
-            onDeleteTenet={handleDeleteTenet}
-            onActivateTenet={handleActivateTenet}
-            onDeactivateTenet={handleDeactivateTenet}
+            tenants={tenets}
+            onEditTenant={handleEditTenant}
+            onDeleteTenant={handleDeleteTenet}
+            onActivateTenant={handleActivateTenet}
+            onDeactivateTenant={handleDeactivateTenet}
           />
         </section>
       </main>

@@ -1,0 +1,106 @@
+/* TenantsListPage.css */
+
+/* Container Styling */
+.tenants-list-page {
+    padding: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+    font-family: Arial, sans-serif;
+  }
+  
+  /* Heading */
+  .tenants-list-page h2 {
+    text-align: center;
+    margin-bottom: 20px;
+    color: #333;
+  }
+  
+  /* Add Tenant Button */
+  .tenants-list-page .primary-button {
+    background-color: #28a745;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    margin-bottom: 20px;
+    cursor: pointer;
+    border-radius: 4px;
+    font-size: 16px;
+  }
+  
+  .tenants-list-page .primary-button:hover {
+    background-color: #218838;
+  }
+  
+  /* Table Styling */
+  .tenants-list-page table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  .tenants-list-page th,
+  .tenants-list-page td {
+    padding: 12px 15px;
+    border: 1px solid #ddd;
+    text-align: left;
+  }
+  
+  .tenants-list-page th {
+    background-color: #f8f9fa;
+    color: #333;
+    font-weight: bold;
+  }
+  
+  .tenants-list-page tr:nth-child(even) {
+    background-color: #f2f2f2;
+  }
+  
+  .tenants-list-page tr:hover {
+    background-color: #e9ecef;
+  }
+  
+  /* Action Buttons */
+  .tenants-list-page .secondary-button {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 7px 12px;
+    cursor: pointer;
+    border-radius: 4px;
+    font-size: 14px;
+  }
+  
+  .tenants-list-page .secondary-button:hover {
+    background-color: #0069d9;
+  }
+  
+  /* Responsive Design */
+  @media (max-width: 768px) {
+    .tenants-list-page table, 
+    .tenants-list-page thead, 
+    .tenants-list-page tbody, 
+    .tenants-list-page th, 
+    .tenants-list-page td, 
+    .tenants-list-page tr { 
+      display: block; 
+    }
+  
+    .tenants-list-page tr {
+      margin-bottom: 15px;
+    }
+  
+    .tenants-list-page td {
+      text-align: right;
+      padding-left: 50%;
+      position: relative;
+    }
+  
+    .tenants-list-page td::before {
+      content: attr(data-label);
+      position: absolute;
+      left: 0;
+      width: 50%;
+      padding-left: 15px;
+      font-weight: bold;
+      text-align: left;
+    }
+  }
