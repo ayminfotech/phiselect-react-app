@@ -2,8 +2,9 @@
 import React, { useEffect, useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../auth/AuthContext';
-import { getAllTenets } from '../../services/TenantService'; // Assuming this service exists
+import { getAllTenets } from '../../services/TenantService';
 import './TenantsListPage.css';
+
 const TenantsListPage = () => {
   const navigate = useNavigate();
   const { auth } = useContext(AuthContext);
@@ -13,7 +14,7 @@ const TenantsListPage = () => {
   useEffect(() => {
     const fetchTenants = async () => {
       try {
-        const data = await getAllTenets(); // Fetch all tenants
+        const data = await getAllTenets();
         setTenants(data);
       } catch (error) {
         console.error('Error fetching tenants:', error);
@@ -26,41 +27,65 @@ const TenantsListPage = () => {
   }, []);
 
   if (loading) {
-    return <div>Loading tenants...</div>;
+    return <div className="loader">Loading tenants...</div>;
   }
 
   return (
     <div className="tenants-list-page">
-      <h2>Tenants</h2>
-      <button onClick={() => navigate('/super-admin/tenants/add')} className="primary-button">
-        Add New Tenant
-      </button>
-      <table>
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Email</th>
-            <th>Phone</th>
-            <th>Status</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {tenants.map((tenant) => (
-            <tr key={tenant.id}>
-              <td>{tenant.name}</td>
-              <td>{tenant.email}</td>
-              <td>{tenant.phone}</td>
-              <td>{tenant.active ? 'Active' : 'Inactive'}</td>
-              <td>
-                <button onClick={() => navigate(`/super-admin/tenants/${tenant.id}/edit`)} className="secondary-button">
-                  Edit
-                </button>
-              </td>
+      <header className="tenants-list-page__header">
+        <h2>Tenants</h2>
+        <button
+          onClick={() => navigate('/super-admin/tenants/add')}
+          className="button button--primary"
+        >
+          <i className="fas fa-plus"></i> Add New Tenant
+        </button>
+      </header>
+      <div className="tenants-list-page__table-container">
+        <table className="tenants-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Phone</th>
+              <th>Status</th>
+              <th className="actions-column">Actions</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {tenants.map((tenant) => (
+              <tr key={tenant.id}>
+                <td>{tenant.name}</td>
+                <td>{tenant.email}</td>
+                <td>{tenant.phone}</td>
+                <td>
+                  <span
+                    className={`status-badge ${
+                      tenant.active ? 'status-active' : 'status-inactive'
+                    }`}
+                  >
+                    {tenant.active ? 'Active' : 'Inactive'}
+                  </span>
+                </td>
+                <td>
+                  <button
+                    onClick={() => navigate(`/super-admin/tenants/${tenant.id}/edit`)}
+                    className="button button--secondary"
+                  >
+                    <i className="fas fa-edit"></i> Edit
+                  </button>
+                  <button
+                    onClick={() => navigate(`/super-admin/tenants/${tenant.id}/reports`)}
+                    className="button button--info"
+                  >
+                    <i className="fas fa-chart-bar"></i> Reports
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };

@@ -1,49 +1,67 @@
-// src/components/admin/TenetSidebar.js
+// src/components/admin/TenantSidebar.js
 import React from 'react';
 import PropTypes from 'prop-types';
 import { useNavigate } from 'react-router-dom';
-import './TenantSidebar.css';
+import './TenantSidebar.css'; // Updated path
 
 const TenetSidebar = ({ activeItem, onMenuClick, onLogout }) => {
   const navigate = useNavigate();
 
   const handleMenuClick = (item) => {
     onMenuClick(item);
-    if (item === 'Tenets') {
-      navigate('/onboard');
-    } else if (item === 'Reports') {
-      navigate('/super-admin/reports');
+    switch (item) {
+      case 'tenets':
+        navigate('/onboard');
+        break;
+      case 'reports':
+        navigate('/super-admin/reports');
+        break;
+      // Add more cases as needed
+      default:
+        navigate('/');
     }
   };
 
   return (
-    <div className="tenet-sidebar">
-      <div className="tenet-sidebar-header">
+    <aside className="tenant-sidebar">
+      <div className="tenant-sidebar__header">
         <h2>ATS Admin</h2>
       </div>
-      <ul className="tenet-sidebar-menu">
-        <li
-          className={`menu-item ${activeItem === 'Tenets' ? 'active' : ''}`}
-          onClick={() => handleMenuClick('Tenets')}
-        >
-          <i className="fa fa-building"></i>
-          <span>Tenets</span>
-        </li>
-        <li
-          className={`menu-item ${activeItem === 'Reports' ? 'active' : ''}`}
-          onClick={() => handleMenuClick('Reports')}
-        >
-          <i className="fa fa-chart-bar"></i>
-          <span>Reports</span>
-        </li>
-        {/* Add more menu items if needed */}
-      </ul>
-      <div className="tenet-sidebar-footer">
-        <button className="logout-button" onClick={onLogout}>
-          Logout
+      <nav className="tenant-sidebar__nav">
+        <ul className="tenant-sidebar__menu">
+          <li
+            className={`tenant-sidebar__menu-item ${
+              activeItem === 'tenets' ? 'tenant-sidebar__menu-item--active' : ''
+            }`}
+            onClick={() => handleMenuClick('tenets')}
+            role="button"
+            tabIndex={0}
+            onKeyPress={(e) => e.key === 'Enter' && handleMenuClick('tenets')}
+          >
+            <i className="fas fa-building"></i>
+            <span>Tenants</span>
+          </li>
+          <li
+            className={`tenant-sidebar__menu-item ${
+              activeItem === 'reports' ? 'tenant-sidebar__menu-item--active' : ''
+            }`}
+            onClick={() => handleMenuClick('reports')}
+            role="button"
+            tabIndex={0}
+            onKeyPress={(e) => e.key === 'Enter' && handleMenuClick('reports')}
+          >
+            <i className="fas fa-chart-bar"></i>
+            <span>Reports</span>
+          </li>
+          {/* Add more menu items here */}
+        </ul>
+      </nav>
+      <div className="tenant-sidebar__footer">
+        <button className="button button--logout" onClick={onLogout}>
+          <i className="fas fa-sign-out-alt"></i> Logout
         </button>
       </div>
-    </div>
+    </aside>
   );
 };
 

@@ -1,4 +1,4 @@
-// src/components/admin/TenetsOnboard.js
+// src/components/admin/TenantsOnboard.js
 import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -6,40 +6,36 @@ import {
   deleteTenet,
   activateTenet,
   deactivateTenet,
-} from '../../services/TenantService'; // Corrected import: handleEditTenant removed
+} from '../../services/TenantService';
 import { AuthContext } from '../auth/AuthContext';
 import TenetSidebar from './TenantSidebar';
 import TenetList from './TenantList';
-import './TenantsOnboard.css';
+import './TenantsOnboard.css'; // Updated path
 
-const TenetsOnboard = () => {
-  const [tenets, setTenets] = useState([]);
-  const [activeItem, setActiveItem] = useState('Tenets');
+const TenantsOnboard = () => {
+  const [tenants, setTenants] = useState([]);
+  const [activeItem, setActiveItem] = useState('tenets');
   const navigate = useNavigate();
   const { logout } = useContext(AuthContext);
 
   useEffect(() => {
-    const fetchTenets = async () => {
+    const fetchTenants = async () => {
       try {
         const data = await getAllTenets();
-        console.log('Fetched Tenets:', data); // Debugging line
-        setTenets(data);
+        console.log('Fetched Tenants:', data);
+        setTenants(data);
       } catch (error) {
-        console.error('Error fetching tenets:', error);
-        alert('Failed to fetch tenets. Please try again later.');
+        console.error('Error fetching tenants:', error);
+        alert('Failed to fetch tenants. Please try again later.');
       }
     };
-    fetchTenets();
+    fetchTenants();
   }, []);
 
-  const handleAddTenet = () => {
+  const handleAddTenant = () => {
     navigate('/super-admin/tenants/add');
   };
 
-  /**
-    * Handles navigation to the Edit Tenet page using id.
-    * @param {String} id - UUID of the organization.
-    */
   const handleEditTenant = (id) => {
     if (!id) {
       console.error('Invalid organization id:', id);
@@ -50,82 +46,70 @@ const TenetsOnboard = () => {
     navigate(`/super-admin/tenants/${id}/edit`);
   };
 
-  /**
-   * Handles deletion of a tenet.
-   * @param {String} tenetId - ID of the tenet to delete.
-   */
-  const handleDeleteTenet = async (tenetId) => {
-    if (!window.confirm('Are you sure you want to delete this tenet?')) return;
+  const handleDeleteTenant = async (tenantId) => {
+    if (!window.confirm('Are you sure you want to delete this tenant?')) return;
 
     try {
-      await deleteTenet(tenetId);
-      setTenets((prev) => prev.filter((t) => t.id !== tenetId));
-      alert('Tenet deleted successfully.');
+      await deleteTenet(tenantId);
+      setTenants((prev) => prev.filter((t) => t.id !== tenantId));
+      alert('Tenant deleted successfully.');
     } catch (error) {
-      console.error('Error deleting tenet:', error);
-      alert('Failed to delete tenet. Please try again.');
+      console.error('Error deleting tenant:', error);
+      alert('Failed to delete tenant. Please try again.');
     }
   };
 
-  /**
-   * Handles activation of a tenet.
-   * @param {String} tenetId - ID of the tenet to activate.
-   */
-  const handleActivateTenet = async (tenetId) => {
+  const handleActivateTenant = async (tenantId) => {
     try {
-      await activateTenet(tenetId);
-      setTenets((prev) =>
+      await activateTenet(tenantId);
+      setTenants((prev) =>
         prev.map((t) =>
-          t.id === tenetId ? { ...t, active: 'true' } : t
+          t.id === tenantId ? { ...t, active: true } : t
         )
       );
-      alert('Tenet activated successfully.');
+      alert('Tenant activated successfully.');
     } catch (error) {
-      console.error('Error activating tenet:', error);
-      alert('Failed to activate tenet. Please try again.');
+      console.error('Error activating tenant:', error);
+      alert('Failed to activate tenant. Please try again.');
     }
   };
 
-  /**
-   * Handles deactivation of a tenet.
-   * @param {String} tenetId - ID of the tenet to deactivate.
-   */
-  const handleDeactivateTenet = async (tenetId) => {
+  const handleDeactivateTenant = async (tenantId) => {
     try {
-      await deactivateTenet(tenetId);
-      setTenets((prev) =>
+      await deactivateTenet(tenantId);
+      setTenants((prev) =>
         prev.map((t) =>
-          t.id === tenetId ? { ...t, active: 'false' } : t
+          t.id === tenantId ? { ...t, active: false } : t
         )
       );
-      alert('Tenet deactivated successfully.');
+      alert('Tenant deactivated successfully.');
     } catch (error) {
-      console.error('Error deactivating tenet:', error);
-      alert('Failed to deactivate tenet. Please try again.');
+      console.error('Error deactivating tenant:', error);
+      alert('Failed to deactivate tenant. Please try again.');
     }
   };
 
   return (
-    <div className="tenets-onboard-container">
+    <div className="tenants-onboard">
       <TenetSidebar
         activeItem={activeItem}
         onMenuClick={setActiveItem}
         onLogout={logout}
       />
-      <main className="content">
-        <header className="header">
-          <h1>Manage Tenets</h1>
-          <button className="primary-button" onClick={handleAddTenet}>
-            Add Tenet
+      <main className="tenants-onboard__content">
+        <header className="tenants-onboard__header">
+          <h1>Manage Tenants</h1>
+          <button className="button button--primary" onClick={handleAddTenant}>
+            <i className="fas fa-plus"></i> Add Tenant
           </button>
         </header>
-        <section className="tenet-list-container">
+        <section className="tenants-onboard__list">
           <TenetList
-            tenants={tenets}
+            tenants={tenants}
             onEditTenant={handleEditTenant}
-            onDeleteTenant={handleDeleteTenet}
-            onActivateTenant={handleActivateTenet}
-            onDeactivateTenant={handleDeactivateTenet}
+            onDeleteTenant={handleDeleteTenant}
+            onActivateTenant={handleActivateTenant}
+            onDeactivateTenant={handleDeactivateTenant}
           />
         </section>
       </main>
@@ -133,4 +117,4 @@ const TenetsOnboard = () => {
   );
 };
 
-export default TenetsOnboard;
+export default TenantsOnboard;

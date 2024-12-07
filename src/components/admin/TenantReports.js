@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { getTenetReports } from '../../services/TenantService';
 import TenetSidebar from './TenantSidebar';
-import './TenetReports.css';
+import './TenantReports.css';
 
 const TenetReports = () => {
   const [reports, setReports] = useState([]);

@@ -1,106 +1,120 @@
-/* TenantsListPage.css */
+/* src/styles/TenantsListPage.css */
 
-/* Container Styling */
+/* Page Container */
 .tenants-list-page {
-    padding: 20px;
-    max-width: 1200px;
-    margin: 0 auto;
-    font-family: Arial, sans-serif;
+    padding: 2rem;
+    background-color: var(--color-light);
+    min-height: 100vh;
   }
   
-  /* Heading */
-  .tenants-list-page h2 {
-    text-align: center;
-    margin-bottom: 20px;
-    color: #333;
+  /* Header */
+  .tenants-list-page__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
   }
   
-  /* Add Tenant Button */
-  .tenants-list-page .primary-button {
-    background-color: #28a745;
-    color: white;
-    border: none;
-    padding: 10px 15px;
-    margin-bottom: 20px;
-    cursor: pointer;
-    border-radius: 4px;
-    font-size: 16px;
+  .tenants-list-page__header h2 {
+    font-size: 1.75rem;
+    color: var(--color-secondary);
   }
   
-  .tenants-list-page .primary-button:hover {
-    background-color: #218838;
+  /* Table Container */
+  .tenants-list-page__table-container {
+    overflow-x: auto;
   }
   
-  /* Table Styling */
-  .tenants-list-page table {
+  /* Table Styles */
+  .tenants-table {
     width: 100%;
     border-collapse: collapse;
+    background-color: var(--color-white);
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
   }
   
-  .tenants-list-page th,
-  .tenants-list-page td {
-    padding: 12px 15px;
-    border: 1px solid #ddd;
+  .tenants-table thead {
+    background-color: var(--color-primary);
+    color: var(--color-white);
+  }
+  
+  .tenants-table th,
+  .tenants-table td {
+    padding: 1rem;
     text-align: left;
+    border-bottom: 1px solid var(--color-gray);
   }
   
-  .tenants-list-page th {
-    background-color: #f8f9fa;
-    color: #333;
-    font-weight: bold;
+  .tenants-table th {
+    font-size: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05rem;
   }
   
-  .tenants-list-page tr:nth-child(even) {
-    background-color: #f2f2f2;
+  .tenants-table tbody tr:hover {
+    background-color: #f1f1f1;
   }
   
-  .tenants-list-page tr:hover {
-    background-color: #e9ecef;
+  .tenants-table tbody tr td.actions-column {
+    display: flex;
+    gap: 0.5rem;
   }
   
-  /* Action Buttons */
-  .tenants-list-page .secondary-button {
-    background-color: #007bff;
-    color: white;
-    border: none;
-    padding: 7px 12px;
-    cursor: pointer;
-    border-radius: 4px;
-    font-size: 14px;
+  /* Status Badges */
+  .status-badge {
+    padding: 0.25rem 0.5rem;
+    border-radius: 12px;
+    font-size: 0.875rem;
+    color: var(--color-white);
   }
   
-  .tenants-list-page .secondary-button:hover {
-    background-color: #0069d9;
+  .status-active {
+    background-color: var(--color-success);
+  }
+  
+  .status-inactive {
+    background-color: var(--color-error);
+  }
+  
+  /* Buttons in Table */
+  .tenants-table .button {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+  }
+  
+  .button--secondary {
+    background-color: var(--color-secondary);
+    color: var(--color-white);
+  }
+  
+  .button--secondary:hover {
+    background-color: var(--color-primary-dark);
+  }
+  
+  .button--info {
+    background-color: var(--color-primary);
+    color: var(--color-white);
+  }
+  
+  .button--info:hover {
+    background-color: var(--color-primary-dark);
   }
   
   /* Responsive Design */
   @media (max-width: 768px) {
-    .tenants-list-page table, 
-    .tenants-list-page thead, 
-    .tenants-list-page tbody, 
-    .tenants-list-page th, 
-    .tenants-list-page td, 
-    .tenants-list-page tr { 
-      display: block; 
+    .tenants-table th,
+    .tenants-table td {
+      padding: 0.75rem;
     }
   
-    .tenants-list-page tr {
-      margin-bottom: 15px;
+    .tenants-list-page__header h2 {
+      font-size: 1.5rem;
     }
   
-    .tenants-list-page td {
-      text-align: right;
-      padding-left: 50%;
-      position: relative;
-    }
-  
-    .tenants-list-page td::before {
-      content: attr(data-label);
-      position: absolute;
-      left: 0;
-      width: 50%;
-      padding-left: 15px;
-      font-weight: bold;
-      text-align: left;
+    .tenants-list-page__header .button {
+      padding: 0.5rem 1rem;
+      font-size: 0.875rem;
     }
   }
