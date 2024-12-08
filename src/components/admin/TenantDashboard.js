@@ -1,14 +1,42 @@
 import React, { useState } from 'react';
 import './TenantDashboard.css';
 
-// Dummy Data
 const stats = [
-    { title: 'Active Jobs', value: 8, icon: '📋' },
-    { title: 'Applications Received', value: 250, icon: '📨' },
-    { title: 'Hires Made', value: 15, icon: '🎯' },
-    { title: 'Pending Interviews', value: 12, icon: '🕒' },
+    { title: 'Active Jobs', value: 8, icon: '📋', prediction: 'Stable trend, no immediate changes predicted' },
+    { title: 'Applications Received', value: 250, icon: '📨', prediction: 'Expected 15% increase in next quarter based on past trends' },
+    { title: 'Interviews Scheduled', value: 20, icon: '🕒', prediction: '95% likely to proceed with interviews based on candidate profile' },
+    { title: 'Offers Made', value: 15, icon: '💼', prediction: 'Offers expected to decrease by 5% due to salary mismatch insights' },
+    { title: 'Hires Made', value: 10, icon: '🎯', prediction: 'Hiring pace expected to maintain with no significant changes' },
+    { title: 'Unjoined Candidates', value: 3, icon: '🚷', rejectionReasons: ['Salary Expectation', 'Unwilling to Relocate'], prediction: 'Likely to increase if salary expectations remain the same' },
+    { title: 'Positions Rejected', value: 5, icon: '❌', rejectionReasons: ['Skills Mismatch', 'Location Issues'], prediction: 'Rejection rate expected to stabilize if new training programs are implemented' },
+    { title: 'Skills Mismatch', value: 8, icon: '🔧', prediction: 'Candidate rejection rate predicted to decrease with improved screening' },
+    { title: 'Candidates Awaiting Feedback', value: 10, icon: '⏳', prediction: 'Feedback backlog expected to reduce with automated analysis' },
+    { title: 'Rejected Candidates', value: 7, icon: '🚫', rejectionReasons: ['Skills Mismatch', 'Cultural Fit'], prediction: 'Rejections may increase as new job requirements are rolled out' },
+
+    // New Metrics
+    { title: 'Time to Hire (Avg)', value: 30, icon: '⏱️', prediction: 'Time to hire expected to decrease by 10% with improved screening processes' },
+    { title: 'Salary Expectations Met', value: 18, icon: '💰', prediction: 'Salary expectations met for 60% of candidates, expected to increase with flexible compensation packages' },
+    { title: 'Job Satisfaction', value: 85, icon: '😊', prediction: 'Job satisfaction rate expected to remain high, driven by improved work-life balance initiatives' },
+    { title: 'Pipeline Progression Rate', value: 65, icon: '📈', prediction: 'Progression rate expected to increase by 10% with refined candidate nurturing strategies' },
+
+    // AI Predictions & Analytics
+    { title: 'Candidate Fit Score', value: 75, icon: '🔍', prediction: 'AI-driven candidate fit score suggests improved hiring accuracy with higher precision in job-fit matching' },
+    { title: 'Cultural Fit Analysis', value: 80, icon: '🌐', prediction: 'Cultural fit percentage expected to improve with more diverse candidate sourcing and hiring practices' },
+    { title: 'Offer Rejections Due to Salary', value: 5, icon: '📉', prediction: 'Offer rejections due to salary expectations are predicted to increase unless salary adjustments are made' },
+
+    // Domain-specific Metrics
+    { title: 'Contractor Positions', value: 3, icon: '📑', prediction: 'Contractor positions will likely rise due to increasing demand for flexible roles in tech' },
+    { title: 'Internships', value: 4, icon: '🎓', prediction: 'Internship opportunities are likely to grow by 25% in the next quarter based on company initiatives' },
+    { title: 'Remote Work Opportunities', value: 10, icon: '💻', prediction: 'Remote work opportunities expected to continue rising, predicted increase of 20% next quarter' },
+    { title: 'Leadership Hires', value: 2, icon: '🧑‍💼', prediction: 'Leadership hires to increase by 10% in the coming quarter due to leadership development programs' },
+
+    // Advanced Metrics and Predictions
+    { title: 'Candidate Engagement Rate', value: 80, icon: '💬', prediction: 'Engagement rate predicted to improve with AI-driven communication and personalized candidate outreach' },
+    { title: 'Referral Hires', value: 6, icon: '🤝', prediction: 'Referral hires expected to increase with enhanced employee referral programs' },
+    { title: 'Diversity Hiring Progress', value: 40, icon: '🌈', prediction: 'Diversity hiring expected to increase by 15% next quarter with new initiatives and targets' }
 ];
 
+// Role Colors
 const roleColors = {
     Admin: '#3498db', // Blue
     Manager: '#27ae60', // Green
@@ -16,15 +44,16 @@ const roleColors = {
     Interviewer: '#e74c3c', // Coral
 };
 
+// Dummy Data for Job Posts, Candidates, Feedback, and Users
 const jobPosts = [
     { jobTitle: 'Software Developer', status: 'Open', assignedTo: 'John Doe' },
     { jobTitle: 'Product Manager', status: 'Filled', assignedTo: 'Jane Smith' },
 ];
 
 const candidates = [
-    { name: 'John Doe', position: 'Software Developer', status: 'Interview Scheduled' },
-    { name: 'Jane Smith', position: 'Product Manager', status: 'Pending' },
-    { name: 'Sam Brown', position: 'HR Specialist', status: 'Applied' },
+    { name: 'John Doe', position: 'Software Developer', status: 'Interview Scheduled', rejectionReason: '' },
+    { name: 'Jane Smith', position: 'Product Manager', status: 'Pending', rejectionReason: 'Skills Mismatch' },
+    { name: 'Sam Brown', position: 'HR Specialist', status: 'Applied', rejectionReason: '' },
 ];
 
 const feedback = [
@@ -32,12 +61,30 @@ const feedback = [
     { candidate: 'Jane Smith', interviewDate: '2023-11-13', feedback: 'Good leadership, needs tech improvement.' },
 ];
 
-// Users Data (for admin to manage)
 const usersData = [
     { name: 'Admin User', role: 'Admin', status: 'Active' },
     { name: 'John Doe', role: 'Manager', status: 'Active' },
     { name: 'Jane Smith', role: 'Recruiter', status: 'Active' },
     { name: 'Sam Brown', role: 'Interviewer', status: 'Inactive' },
+];
+
+// Reports and Analytics Data
+const reports = [
+    { reportTitle: 'Recruitment Report', date: '2023-12-01', status: 'Completed' },
+    { reportTitle: 'Job Postings Analysis', date: '2023-11-15', status: 'Pending' },
+    { reportTitle: 'Candidate Sourcing Report', date: '2023-10-28', status: 'Completed' },
+];
+
+const analytics = [
+    { metric: 'Total Candidates Interviewed', value: 120 },
+    { metric: 'Job Postings in Last Month', value: 35 },
+    { metric: 'Average Time to Hire', value: '12 days' },
+    { metric: 'Candidates Accepted Offers', value: 75 },
+    { metric: 'Positions Rejected', value: 5 },
+    { metric: 'Unjoined Candidates', value: 3 },
+    { metric: 'Skills Mismatch', value: 8 },
+    { metric: 'Candidates Awaiting Feedback', value: 10 },
+    { metric: 'Rejected Candidates', value: 7 },
 ];
 
 const TenantDashboard = () => {
@@ -46,16 +93,41 @@ const TenantDashboard = () => {
     const [users, setUsers] = useState(usersData); // User data state
     const [newUserName, setNewUserName] = useState('');
     const [newUserRole, setNewUserRole] = useState('Manager');
+    const [reportsData, setReportsData] = useState([]);
+    const [analyticsData, setAnalyticsData] = useState([]);
+    const [isLoading, setIsLoading] = useState(false);
 
-    // Add a new user to the users array
+    // Simulate backend call to add user
     const createUser = () => {
-        const newUser = {
-            name: newUserName,
-            role: newUserRole,
-            status: 'Active',
-        };
-        setUsers([...users, newUser]);
-        setNewUserName('');
+        setIsLoading(true);
+        setTimeout(() => {
+            const newUser = {
+                name: newUserName,
+                role: newUserRole,
+                status: 'Active',
+            };
+            setUsers([...users, newUser]);
+            setNewUserName('');
+            setIsLoading(false);
+        }, 1000); // Simulate async backend delay
+    };
+
+    // Simulate backend call to fetch reports
+    const fetchReports = () => {
+        setIsLoading(true);
+        setTimeout(() => {
+            setReportsData(reports);
+            setIsLoading(false);
+        }, 1000);
+    };
+
+    // Simulate backend call to fetch analytics
+    const fetchAnalytics = () => {
+        setIsLoading(true);
+        setTimeout(() => {
+            setAnalyticsData(analytics);
+            setIsLoading(false);
+        }, 1000);
     };
 
     // Toggle user status (Active/Inactive)
@@ -64,6 +136,19 @@ const TenantDashboard = () => {
             user.name === name ? { ...user, status: user.status === 'Active' ? 'Inactive' : 'Active' } : user
         );
         setUsers(updatedUsers);
+    };
+
+    // Render ATS stages
+    const renderStages = () => {
+        return stats.map((stat, index) => (
+            <div key={index} className="stat-card">
+                <div className="icon">{stat.icon}</div>
+                <div className="details">
+                    <h3>{stat.value}</h3>
+                    <p>{stat.title}</p>
+                </div>
+            </div>
+        ));
     };
 
     const renderRoleContent = () => {
@@ -91,7 +176,9 @@ const TenantDashboard = () => {
                                     <option value="Interviewer">Interviewer</option>
                                     <option value="Admin">Admin</option>
                                 </select>
-                                <button className="action-btn" onClick={createUser}>Create User</button>
+                                <button className="action-btn" onClick={createUser} disabled={isLoading}>
+                                    {isLoading ? 'Creating...' : 'Create User'}
+                                </button>
                             </div>
 
                             <h4>All Users</h4>
@@ -106,6 +193,26 @@ const TenantDashboard = () => {
                                 ))}
                             </ul>
                         </div>
+
+                        <h4>Reports</h4>
+                        <button onClick={fetchReports}>Load Reports</button>
+                        <ul>
+                            {reportsData.map((report, index) => (
+                                <li key={index}>
+                                    {report.reportTitle} - {report.date} - {report.status}
+                                </li>
+                            ))}
+                        </ul>
+
+                        <h4>Analytics</h4>
+                        <button onClick={fetchAnalytics}>Load Analytics</button>
+                        <ul>
+                            {analyticsData.map((item, index) => (
+                                <li key={index}>
+                                    {item.metric}: {item.value}
+                                </li>
+                            ))}
+                        </ul>
 
                         <h4>Job Posts</h4>
                         <ul>
@@ -172,7 +279,7 @@ const TenantDashboard = () => {
             {/* Navigation */}
             <nav className="main-navigation">
                 <ul>
-                    {['Dashboard', 'Jobs', 'Candidates', 'Settings'].map((item) => (
+                    {['Dashboard', 'Jobs', 'Candidates', 'Reports', 'Settings'].map((item) => (
                         <li
                             key={item}
                             className={activeNav === item ? 'active' : ''}
@@ -192,15 +299,7 @@ const TenantDashboard = () => {
 
             {/* Stats Section */}
             <section className="stats-section">
-                {stats.map((stat, index) => (
-                    <div key={index} className="stat-card">
-                        <div className="icon">{stat.icon}</div>
-                        <div className="details">
-                            <h3>{stat.value}</h3>
-                            <p>{stat.title}</p>
-                        </div>
-                    </div>
-                ))}
+                {renderStages()}
             </section>
 
             {/* Role Tabs */}
