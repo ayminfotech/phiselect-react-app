@@ -19,7 +19,6 @@ export const updateJob = async (jobId, jobData, token) => {
 export const deleteJob = async (jobId, token) => {
   return axios.delete(`${API_BASE_URL}/${jobId}`, getConfig(token));
 };
-
-export const fetchAllJobs = async (token) => {
-  return axios.get(API_BASE_URL, getConfig(token));
+export const getActiveJobs = async (token) => {
+  return axios.delete(`${API_BASE_URL}/}`, getConfig(token));
 };
