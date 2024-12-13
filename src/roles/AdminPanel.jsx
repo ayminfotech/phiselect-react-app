@@ -22,30 +22,46 @@ import {
   IconButton,
   Tooltip,
   DialogContentText,
+  CircularProgress,
+  Chip,
+  FormControlLabel,
 } from '@mui/material';
+import { styled } from '@mui/material/styles';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import LockResetIcon from '@mui/icons-material/LockReset'; // Icon for password reset
 import { DataGrid } from '@mui/x-data-grid';
-import { createUser, getAllUsers, updateUser, deleteUser } from '../services/UserService';
-import PropTypes from 'prop-types';
-import { AuthContext } from '../components/auth/AuthContext'; // Import AuthContext
+import {
+  createUser,
+  getUsersByTenantId,
+  updateUser,
+  deleteUser,
+  assignRoleToUser,
+  changeUserPassword,
+} from '../services/UserService';
+import { AuthContext } from '../components/auth/AuthContext'; // Corrected import path
+
+// Styled Components for better UI
+const StyledPaper = styled(Paper)(({ theme }) => ({
+  padding: theme.spacing(4),
+  backgroundColor: theme.palette.background.paper,
+}));
+
+const RoleChip = styled(Chip)(({ theme }) => ({
+  margin: theme.spacing(0.5),
+}));
 
 const AdminPanel = () => {
   // Access AuthContext to get tenantId
   const { auth } = useContext(AuthContext);
-  const { tenantId, roles } = auth || {};
+  const { tenantId } = auth || {};
 
-  // State for user creation dialog
+  // State Management
   const [openCreate, setOpenCreate] = useState(false);
-
-  // State for user editing dialog
   const [openEdit, setOpenEdit] = useState(false);
-
-  // State for delete confirmation dialog
   const [openDelete, setOpenDelete] = useState(false);
-
-  // State for form inputs (Create)
+  const [openResetPassword, setOpenResetPassword] = useState(false); // State for reset password dialog
   const [createFormData, setCreateFormData] = useState({
     email: '',
     firstname: '',
@@ -54,8 +70,6 @@ const AdminPanel = () => {
     superAdmin: false,
     roles: [],
   });
-
-  // State for form inputs (Edit)
   const [editFormData, setEditFormData] = useState({
     id: '',
     email: '',
@@ -66,31 +80,34 @@ const AdminPanel = () => {
     roles: [],
     status: '',
   });
-
-  // State for users list
+  const [resetPasswordData, setResetPasswordData] = useState({
+    userId: '',
+    newPassword: '',
+    confirmPassword: '',
+  });
   const [users, setUsers] = useState([]);
-
-  // State for roles options
-  const rolesOptions = ['ADMIN', 'MANAGER', 'RECRUITER', 'INTERVIEWER'];
-
-  // State for notifications
+  const [rolesOptions] = useState(['ADMIN', 'MANAGER', 'RECRUITER', 'INTERVIEWER']);
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: '',
-    severity: 'success', // 'success' | 'error' | 'warning' | 'info'
+    severity: 'success',
   });
-
-  // State for selected user to delete
   const [selectedUser, setSelectedUser] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [resetLoading, setResetLoading] = useState(false); // Loading state for password reset
 
   // Fetch users on component mount
   useEffect(() => {
-    fetchUsers();
-  }, []);
+    if (tenantId) {
+      fetchUsers(tenantId);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tenantId]);
 
-  const fetchUsers = async () => {
+  const fetchUsers = async (tenantId) => {
+    setLoading(true);
     try {
-      const data = await getAllUsers();
+      const data = await getUsersByTenantId(tenantId);
       setUsers(data);
     } catch (error) {
       console.error(error);
@@ -99,17 +116,69 @@ const AdminPanel = () => {
         message: 'Failed to fetch users.',
         severity: 'error',
       });
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Handle Create Dialog open/close
-  const handleClickOpenCreate = () => {
-    setOpenCreate(true);
-  };
-
+  // Dialog Handlers
+  const handleOpenCreate = () => setOpenCreate(true);
   const handleCloseCreate = () => {
     setOpenCreate(false);
-    // Reset form
+    resetCreateForm();
+  };
+
+  const handleOpenEdit = (user) => {
+    setEditFormData({
+      id: user.id,
+      email: user.email,
+      firstname: user.firstname,
+      lastname: user.lastname,
+      password: '',
+      superAdmin: user.superAdmin,
+      roles: user.roles,
+      status: user.status,
+    });
+    setOpenEdit(true);
+  };
+
+  const handleCloseEdit = () => {
+    setOpenEdit(false);
+    resetEditForm();
+  };
+
+  const handleOpenDelete = (user) => {
+    setSelectedUser(user);
+    setOpenDelete(true);
+  };
+
+  const handleCloseDelete = () => {
+    setOpenDelete(false);
+    setSelectedUser(null);
+  };
+
+  const handleOpenResetPassword = (user) => {
+    setSelectedUser(user);
+    setResetPasswordData({
+      userId: user.id,
+      newPassword: '',
+      confirmPassword: '',
+    });
+    setOpenResetPassword(true);
+  };
+
+  const handleCloseResetPassword = () => {
+    setOpenResetPassword(false);
+    setSelectedUser(null);
+    setResetPasswordData({
+      userId: '',
+      newPassword: '',
+      confirmPassword: '',
+    });
+  };
+
+  // Form Reset Functions
+  const resetCreateForm = () => {
     setCreateFormData({
       email: '',
       firstname: '',
@@ -120,24 +189,7 @@ const AdminPanel = () => {
     });
   };
 
-  // Handle Edit Dialog open/close
-  const handleClickOpenEdit = (user) => {
-    setEditFormData({
-      id: user.id,
-      email: user.email,
-      firstname: user.firstname,
-      lastname: user.lastname,
-      password: '', // Leave empty to not change password
-      superAdmin: user.superAdmin,
-      roles: user.roles,
-      status: user.status,
-    });
-    setOpenEdit(true);
-  };
-
-  const handleCloseEdit = () => {
-    setOpenEdit(false);
-    // Reset form
+  const resetEditForm = () => {
     setEditFormData({
       id: '',
       email: '',
@@ -150,18 +202,7 @@ const AdminPanel = () => {
     });
   };
 
-  // Handle Delete Dialog open/close
-  const handleClickOpenDelete = (user) => {
-    setSelectedUser(user);
-    setOpenDelete(true);
-  };
-
-  const handleCloseDelete = () => {
-    setOpenDelete(false);
-    setSelectedUser(null);
-  };
-
-  // Handle form input changes (Create)
+  // Handle form input changes
   const handleCreateChange = (e) => {
     const { name, value, type, checked } = e.target;
     setCreateFormData((prev) => ({
@@ -170,7 +211,6 @@ const AdminPanel = () => {
     }));
   };
 
-  // Handle form input changes (Edit)
   const handleEditChange = (e) => {
     const { name, value, type, checked } = e.target;
     setEditFormData((prev) => ({
@@ -179,40 +219,36 @@ const AdminPanel = () => {
     }));
   };
 
-  // Handle roles selection (Create)
+  const handleResetPasswordChange = (e) => {
+    const { name, value } = e.target;
+    setResetPasswordData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  // Handle roles selection
   const handleCreateRolesChange = (event) => {
-    const {
-      target: { value },
-    } = event;
+    const { target: { value } } = event;
     setCreateFormData((prev) => ({
       ...prev,
       roles: typeof value === 'string' ? value.split(',') : value,
     }));
   };
 
-  // Handle roles selection (Edit)
   const handleEditRolesChange = (event) => {
-    const {
-      target: { value },
-    } = event;
+    const { target: { value } } = event;
     setEditFormData((prev) => ({
       ...prev,
       roles: typeof value === 'string' ? value.split(',') : value,
     }));
   };
 
-  // Handle Create form submission
+  // Handle Create User Submission
   const handleCreateSubmit = async () => {
-    const {
-      email,
-      firstname,
-      lastname,
-      password,
-      superAdmin,
-      roles,
-    } = createFormData;
+    const { email, firstname, lastname, password, superAdmin, roles } = createFormData;
 
-    // Basic validation
+    // Form Validation
     if (!email || !firstname || !lastname || !password) {
       setSnackbar({
         open: true,
@@ -222,7 +258,6 @@ const AdminPanel = () => {
       return;
     }
 
-    // Prepare user payload
     const userPayload = {
       email,
       firstname,
@@ -230,41 +265,37 @@ const AdminPanel = () => {
       password,
       superAdmin,
       roles,
-      tenantId, // Automatically include Tenant ID from AuthContext
+      tenant: {
+        tenantId,
+        name: 'AYP Technologies', // Ideally, this should come from context or a separate source
+      },
     };
 
     try {
-      await createUser(userPayload);
+      const response = await createUser(userPayload);
       setSnackbar({
         open: true,
         message: 'User created successfully!',
         severity: 'success',
       });
       handleCloseCreate();
-      fetchUsers(); // Refresh users list
+      fetchUsers(tenantId);
+      // Optionally, handle the returned password securely here
+      // For example, notify the admin to communicate the password securely to the user
     } catch (error) {
       setSnackbar({
         open: true,
-        message: error || 'Failed to create user.',
+        message: error.message || 'Failed to create user.',
         severity: 'error',
       });
     }
   };
 
-  // Handle Edit form submission
+  // Handle Edit User Submission
   const handleEditSubmit = async () => {
-    const {
-      id,
-      email,
-      firstname,
-      lastname,
-      password, // Optional: Only send if changing password
-      superAdmin,
-      roles,
-      status,
-    } = editFormData;
+    const { id, email, firstname, lastname, password, superAdmin, roles, status } = editFormData;
 
-    // Basic validation
+    // Form Validation
     if (!email || !firstname || !lastname) {
       setSnackbar({
         open: true,
@@ -274,7 +305,6 @@ const AdminPanel = () => {
       return;
     }
 
-    // Prepare user payload
     const userPayload = {
       email,
       firstname,
@@ -282,11 +312,13 @@ const AdminPanel = () => {
       superAdmin,
       roles,
       status,
-      tenantId, // Automatically include Tenant ID from AuthContext
+      tenant: {
+        tenantId,
+        name: 'AYP Technologies', // Ideally, this should come from context or a separate source
+      },
     };
 
-    // Only include password if it's being changed
-    if (password && password.length > 0) {
+    if (password) {
       userPayload.password = password;
     }
 
@@ -298,17 +330,17 @@ const AdminPanel = () => {
         severity: 'success',
       });
       handleCloseEdit();
-      fetchUsers(); // Refresh users list
+      fetchUsers(tenantId);
     } catch (error) {
       setSnackbar({
         open: true,
-        message: error || 'Failed to update user.',
+        message: error.message || 'Failed to update user.',
         severity: 'error',
       });
     }
   };
 
-  // Handle Delete confirmation
+  // Handle Delete Confirmation
   const handleDeleteConfirm = async () => {
     if (!selectedUser) return;
 
@@ -320,17 +352,65 @@ const AdminPanel = () => {
         severity: 'success',
       });
       handleCloseDelete();
-      fetchUsers(); // Refresh users list
+      fetchUsers(tenantId);
     } catch (error) {
       setSnackbar({
         open: true,
-        message: error || 'Failed to delete user.',
+        message: error.message || 'Failed to delete user.',
         severity: 'error',
       });
     }
   };
 
-  // Handle snackbar close
+  // Handle Reset Password Submission
+  const handleResetPasswordSubmit = async () => {
+    const { userId, newPassword, confirmPassword } = resetPasswordData;
+
+    // Form Validation
+    if (!newPassword || !confirmPassword) {
+      setSnackbar({
+        open: true,
+        message: 'Please fill in all password fields.',
+        severity: 'warning',
+      });
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setSnackbar({
+        open: true,
+        message: 'Passwords do not match.',
+        severity: 'warning',
+      });
+      return;
+    }
+
+    setResetLoading(true);
+    try {
+      await changeUserPassword({
+        currentPassword: '', // Not required for admin resetting password
+        newPassword,
+        confirmationPassword: confirmPassword,
+      });
+      setSnackbar({
+        open: true,
+        message: 'Password reset successfully!',
+        severity: 'success',
+      });
+      handleCloseResetPassword();
+      fetchUsers(tenantId);
+    } catch (error) {
+      setSnackbar({
+        open: true,
+        message: error.message || 'Failed to reset password.',
+        severity: 'error',
+      });
+    } finally {
+      setResetLoading(false);
+    }
+  };
+
+  // Snackbar Handler
   const handleSnackbarClose = () => {
     setSnackbar((prev) => ({
       ...prev,
@@ -338,7 +418,7 @@ const AdminPanel = () => {
     }));
   };
 
-  // Define columns for DataGrid with Edit and Delete actions
+  // Define columns for DataGrid with enhanced role display and password reset action
   const columns = [
     { field: 'id', headerName: 'ID', width: 70 },
     { field: 'email', headerName: 'Email', width: 200 },
@@ -346,32 +426,65 @@ const AdminPanel = () => {
     { field: 'lastname', headerName: 'Last Name', width: 130 },
     { field: 'tenantName', headerName: 'Tenant Name', width: 180 },
     { field: 'tenantId', headerName: 'Tenant ID', width: 180 },
-    { field: 'superAdmin', headerName: 'Super Admin', width: 130, type: 'boolean' },
+    {
+      field: 'superAdmin',
+      headerName: 'Super Admin',
+      width: 130,
+      type: 'boolean',
+      align: 'center',
+      headerAlign: 'center',
+    },
     {
       field: 'roles',
       headerName: 'Roles',
-      width: 200,
-      renderCell: (params) => params.value.join(', '),
+      width: 250,
+      sortable: false,
+      filterable: false,
+      renderCell: (params) => (
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+          {params.value.map((role) => (
+            <RoleChip key={role} label={role} color="primary" size="small" />
+          ))}
+        </Box>
+      ),
     },
-    { field: 'status', headerName: 'Status', width: 100 },
+    {
+      field: 'status',
+      headerName: 'Status',
+      width: 120,
+      renderCell: (params) => (
+        <Typography color={params.value === 'Active' ? 'green' : 'red'}>
+          {params.value}
+        </Typography>
+      ),
+      align: 'center',
+      headerAlign: 'center',
+    },
     {
       field: 'actions',
       headerName: 'Actions',
-      width: 150,
+      width: 250,
       sortable: false,
       filterable: false,
+      align: 'center',
+      headerAlign: 'center',
       renderCell: (params) => {
         const user = params.row;
         return (
-          <Box sx={{ display: 'flex', gap: 1 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1 }}>
             <Tooltip title="Edit User">
-              <IconButton color="primary" onClick={() => handleClickOpenEdit(user)}>
+              <IconButton color="primary" onClick={() => handleOpenEdit(user)}>
                 <EditIcon />
               </IconButton>
             </Tooltip>
             <Tooltip title="Delete User">
-              <IconButton color="error" onClick={() => handleClickOpenDelete(user)}>
+              <IconButton color="error" onClick={() => handleOpenDelete(user)}>
                 <DeleteIcon />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Reset Password">
+              <IconButton color="secondary" onClick={() => handleOpenResetPassword(user)}>
+                <LockResetIcon />
               </IconButton>
             </Tooltip>
           </Box>
@@ -390,33 +503,40 @@ const AdminPanel = () => {
     tenantId: user.tenant?.tenantId || '',
     superAdmin: user.superAdmin,
     roles: user.roles,
-    status: user.status,
+    status: user.status || 'Active', // Default status if not provided
   }));
 
   return (
-    <Paper sx={{ padding: 4, backgroundColor: 'background.paper' }} elevation={3}>
+    <StyledPaper elevation={3}>
       {/* Header */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
         <Typography variant="h5">Admin Panel</Typography>
-        <Button variant="contained" startIcon={<AddIcon />} onClick={handleClickOpenCreate}>
+        <Button variant="contained" startIcon={<AddIcon />} onClick={handleOpenCreate}>
           Create User
         </Button>
       </Box>
 
       {/* Users DataGrid */}
-      <Box sx={{ height: 600, width: '100%' }}>
-        <DataGrid
-          rows={rows}
-          columns={columns}
-          pageSize={10}
-          rowsPerPageOptions={[10, 20, 50]}
-          disableSelectionOnClick
-          sx={{
-            '& .MuiDataGrid-row:hover': {
-              backgroundColor: '#f5f5f5',
-            },
-          }}
-        />
+      <Box sx={{ height: 600, width: '100%', marginBottom: 4 }}>
+        {loading ? (
+          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
+            <CircularProgress />
+          </Box>
+        ) : (
+          <DataGrid
+            rows={rows}
+            columns={columns}
+            pageSize={10}
+            rowsPerPageOptions={[10, 20, 50]}
+            disableSelectionOnClick
+            autoHeight
+            sx={{
+              '& .MuiDataGrid-row:hover': {
+                backgroundColor: '#f5f5f5',
+              },
+            }}
+          />
+        )}
       </Box>
 
       {/* Create User Dialog */}
@@ -458,17 +578,16 @@ const AdminPanel = () => {
               required
               type="password"
             />
-            {/* Removed Tenant Name and Tenant ID Fields */}
-            <FormControl>
-              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <FormControlLabel
+              control={
                 <Checkbox
                   checked={createFormData.superAdmin}
                   onChange={handleCreateChange}
                   name="superAdmin"
                 />
-                <Typography>Super Admin</Typography>
-              </Box>
-            </FormControl>
+              }
+              label="Super Admin"
+            />
             <FormControl fullWidth>
               <InputLabel id="create-roles-label">Roles</InputLabel>
               <Select
@@ -538,17 +657,16 @@ const AdminPanel = () => {
               type="password"
               helperText="Leave blank to keep existing password"
             />
-            {/* Removed Tenant Name and Tenant ID Fields */}
-            <FormControl>
-              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <FormControlLabel
+              control={
                 <Checkbox
                   checked={editFormData.superAdmin}
                   onChange={handleEditChange}
                   name="superAdmin"
                 />
-                <Typography>Super Admin</Typography>
-              </Box>
-            </FormControl>
+              }
+              label="Super Admin"
+            />
             <FormControl fullWidth>
               <InputLabel id="edit-roles-label">Roles</InputLabel>
               <Select
@@ -592,6 +710,41 @@ const AdminPanel = () => {
         </DialogActions>
       </Dialog>
 
+      {/* Reset Password Dialog */}
+      <Dialog open={openResetPassword} onClose={handleCloseResetPassword} fullWidth maxWidth="sm">
+        <DialogTitle>Reset Password for {selectedUser?.email}</DialogTitle>
+        <DialogContent>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, marginTop: 1 }}>
+            <TextField
+              label="New Password"
+              name="newPassword"
+              variant="outlined"
+              value={resetPasswordData.newPassword}
+              onChange={handleResetPasswordChange}
+              required
+              type="password"
+            />
+            <TextField
+              label="Confirm New Password"
+              name="confirmPassword"
+              variant="outlined"
+              value={resetPasswordData.confirmPassword}
+              onChange={handleResetPasswordChange}
+              required
+              type="password"
+            />
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseResetPassword} color="secondary" variant="outlined">
+            Cancel
+          </Button>
+          <Button onClick={handleResetPasswordSubmit} color="primary" variant="contained" disabled={resetLoading}>
+            {resetLoading ? <CircularProgress size={24} /> : 'Reset Password'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
       {/* Delete Confirmation Dialog */}
       <Dialog open={openDelete} onClose={handleCloseDelete}>
         <DialogTitle>Delete User</DialogTitle>
@@ -621,12 +774,8 @@ const AdminPanel = () => {
           {snackbar.message}
         </Alert>
       </Snackbar>
-    </Paper>
+    </StyledPaper>
   );
 };
 
-AdminPanel.propTypes = {
-  // Define prop types if needed
-};
-
-export default AdminPanel;
+export default AdminPanel; 
