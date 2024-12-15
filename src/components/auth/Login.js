@@ -24,13 +24,20 @@ const Login = () => {
             console.log('Roles:', roles); // Debugging: Log roles
             console.log('Tenant ID:', tenantId); // Debugging: Log tenant ID
         
+            // Define roles that should navigate to the Tenant Dashboard
+            const dashboardRoles = ['ADMIN', 'MANAGER', 'INTERVIEWER', 'RECRUITER'];
+        
             // Redirect based on roles
             if (roles.includes('SUPER_ADMIN')) {
                 console.log('Navigating to /onboard');
                 navigate('/onboard'); // Redirect to onboard page for SUPER_ADMIN
-            } else if (roles.includes('ADMIN')) {
-                console.log(`Navigating to /tenant/${tenantId}/dashboard`);
-                navigate(`/tenant/${tenantId}/dashboard`); // Redirect to tenant dashboard
+            } else if (dashboardRoles.some(role => roles.includes(role))) {
+                if (tenantId) {
+                    console.log(`Navigating to /tenant/${tenantId}/dashboard`);
+                    navigate(`/tenant/${tenantId}/dashboard`); // Redirect to tenant dashboard
+                } else {
+                    alert('Tenant ID is missing. Please contact support.');
+                }
             } else {
                 alert('Unauthorized Role'); // Fallback for unsupported roles
             }

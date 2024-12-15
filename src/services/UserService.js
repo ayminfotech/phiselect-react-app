@@ -1,6 +1,7 @@
 // src/services/UserService.js
 
 import axios from 'axios';
+import { jwtDecode } from 'jwt-decode';
 
 // Base URL configuration (adjust as needed)
 const API_BASE_URL = 'http://localhost:8290/api/users';
@@ -18,19 +19,48 @@ const axiosInstance = axios.create({
   baseURL: API_BASE_URL,
 });
 
-// Request interceptor to add the Authorization header to every request
+// Request interceptor to attach tokens and log requests
 axiosInstance.interceptors.request.use(
-  (config) => {
-    const token = getAuthToken();
-    if (token) {
-      config.headers['Authorization'] = `Bearer ${token}`;
+    (config) => {
+      const authData = localStorage.getItem('auth');
+      const auth = authData ? JSON.parse(authData) : null;
+  
+      if (auth?.token) {
+        try {
+          // Decode the token to extract tenantId and userRefId
+          const decodedToken = jwtDecode(auth.token);
+          const tenantId = decodedToken.tenantId || 'No Tenant ID Found';
+          const userRefId = decodedToken.userRefID || 'No User Ref ID Found';
+  
+          // Adding headers
+        //   config.headers.Authorization = `Bearer ${auth.token}`;
+        //   config.headers['Tenant-ID'] = tenantId;
+        //   config.headers['User-Ref-ID'] = userRefId;
+  
+          // Logging details
+          console.log('==== Preparing API Request ====');
+          console.log('Request URL:', config.url);
+          console.log('Request Method:', config.method);
+          console.log('Token:', auth.token);
+          console.log('Tenant ID:', tenantId);
+          console.log('User Ref ID:', userRefId);
+          console.log('Request Headers:', config.headers);
+          if (config.data) {
+            console.log('Request Data:', config.data);
+          }
+          console.log('===============================');
+        } catch (error) {
+          console.error('Failed to decode token:', error.message);
+        }
+      }
+  
+      return config;
+    },
+    (error) => {
+      console.error('Error in request interceptor:', error);
+      return Promise.reject(error);
     }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
+  );
 
 // Create a new user
 export const createUser = async (userData) => {
@@ -98,3 +128,31 @@ export const deleteUser = async (userId) => {
     throw error.response?.data || 'Error deleting user';
   }
 };
+
+// Fetch users by tenantId and roles
+export const getUsersByTenantIdAndRoles = async (roles) => {
+    try {
+        const authData = localStorage.getItem('auth');
+        const auth = authData ? JSON.parse(authData) : null;
+      if (!auth?.token) {
+        throw new Error('No token found');
+      }
+  
+      // Decode token to get tenantId
+      const decodedToken = jwtDecode(auth.token);
+      const tenantId = decodedToken.tenantId;
+  
+      if (!tenantId) {
+        throw new Error('Tenant ID not found in token');
+      }
+  
+      const rolesString = roles.join(',');  // Convert roles array to a comma-separated string
+      const response = await axiosInstance.get(`/tenant/${tenantId}/roles`, {
+        params: { roles: rolesString }
+      });
+      return response.data;  // Return the list of users based on tenantId and roles
+    } catch (error) {
+      console.error('Error fetching users by tenant and roles:', error);
+      throw error.response?.data || 'Error fetching users';
+    }
+  };

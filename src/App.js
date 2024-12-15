@@ -60,11 +60,11 @@ const App = () => {
         }
       />
 
-      {/* Tenant Admin Route */}
+      {/* Tenant Admin Route with Multiple Roles */}
       <Route
         path="/tenant/:tenantId/dashboard"
-        element={
-          <ProtectedRoute allowedRoles={['ADMIN']}>
+        element={   
+          <ProtectedRoute allowedRoles={['ADMIN', 'MANAGER', 'INTERVIEWER', 'RECRUITER']}>
             <TenantDashboard />
           </ProtectedRoute>
         }
