@@ -209,10 +209,10 @@ export const getAssignedJobsByRecruiter = async () => {
     // Decode the token to extract tenantId and userRefId
     const decodedToken = jwtDecode(auth.token);
     const tenantId = decodedToken.tenantId;  // Assuming tenantId is in the token payload
-    const userRefId = decodedToken.userRefId;  // Assuming userRefId is in the token payload
+    const userRefId = decodedToken.userRefID;  // Assuming userRefId is in the token payload
 
     // Fetch assigned jobs using the tenantId and userRefId
-    const response = await axios.get(`${API_BASE_URL}/tenant/${tenantId}/recruiter/${userRefId}`);
+    const response = await axiosInstance.get(`${API_BASE_URL}/jobs/tenant/${tenantId}/recruiter/${userRefId}`);
     return response.data;
 
   } catch (error) {
