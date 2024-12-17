@@ -1,30 +1,18 @@
-// src/components/roles/RecruiterPanel.jsx
-
 import React, { useEffect, useState } from 'react';
-import { 
-  Box, 
-  Typography, 
-  Grid, 
-  Paper, 
-  Divider, 
-  CircularProgress,
-  Alert,
-} from '@mui/material';
+import { Box, Typography, Grid, Paper, Divider, CircularProgress, Alert, Avatar } from '@mui/material';
 import { getAssignedJobsByRecruiter } from '../services/jobService';
-import JobCard from './JobCard'; // Ensure the correct import path
-import BulkUploadCandidates from './BulkUploadCandidates';
+import JobCard from './JobCard';
+import commonStyles from '../styles/commonStyles';
 
 const RecruiterPanel = () => {
   const [jobPosts, setJobPosts] = useState([]);
   const [loadingJobs, setLoadingJobs] = useState(true);
   const [error, setError] = useState(null);
 
-  // Fetch assigned jobs on component mount
   useEffect(() => {
     const fetchJobs = async () => {
       try {
         const jobs = await getAssignedJobsByRecruiter();
-        console.log('Fetched Jobs:', jobs); // Debugging line
         setJobPosts(jobs);
       } catch (err) {
         setError(err.message || 'Failed to fetch jobs');
@@ -36,70 +24,51 @@ const RecruiterPanel = () => {
     fetchJobs();
   }, []);
 
-  const handleBulkUploadSuccess = (createdCandidates) => {
-    // Optionally, update state or provide feedback
-    console.log('Bulk upload successful:', createdCandidates);
-    // Refresh jobs or specific PositionCards if necessary
-    // Example: setJobPosts([...jobPosts]); // Trigger re-render
-  };
-
-  if (loadingJobs) {
-    return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', mt: 5 }}>
-        <CircularProgress />
-      </Box>
-    );
-  }
-
   return (
-    <Paper
-      elevation={3}
-      sx={{
-        p: 3,
-        borderRadius: 2,
-        backgroundColor: (theme) => theme.palette.background.paper,
-      }}
-    >
-      <Typography variant="h5" gutterBottom sx={{ fontWeight: 'bold' }}>
-        Recruiter Panel
-      </Typography>
-      <Typography variant="subtitle2" color="textSecondary" gutterBottom>
-        Quickly source candidates and assign them to open roles.
-      </Typography>
+    <Paper elevation={3} sx={{ p: 4, borderRadius: 3, backgroundColor: '#f9f9f9' }}>
+      {/* Header */}
+      <Box display="flex" alignItems="center" mb={3}>
+        <Avatar src="/static/images/recruiter-avatar.png" sx={{ width: 64, height: 64, mr: 2 }} />
+        <Box>
+          <Typography variant="h5" sx={commonStyles.header}>
+            Recruiter Panel
+          </Typography>
+          <Typography sx={commonStyles.subtitle}>
+            Manage your assigned jobs efficiently.
+          </Typography>
+        </Box>
+      </Box>
       <Divider sx={{ mb: 3 }} />
 
+      {/* Error Alert */}
       {error && (
-        <Alert severity="error" sx={{ mb: 3 }}>
+        <Alert severity="error" sx={commonStyles.errorAlert}>
           {error}
         </Alert>
       )}
 
-      <Box sx={{ mb: 4 }}>
-        <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1 }}>
-          Your Assigned Jobs
-        </Typography>
-        <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
-          Review your assigned jobs and source candidates for each open position.
-        </Typography>
-        <Grid container spacing={3} sx={{ mt: 1 }}>
-          {jobPosts.length > 0 ? (
-            jobPosts.map((job) => (
-              <Grid item xs={12} key={job.id}>
-                <JobCard job={job} />
-              </Grid>
-            ))
-          ) : (
-            <Typography variant="body1" sx={{ mt: 2, color: 'text.secondary', width: '100%' }}>
-              No jobs assigned yet.
-            </Typography>
-          )}
-        </Grid>
-      </Box>
-
-      {/* Bulk Upload Section */}
-      <Box sx={{ mb: 4 }}>
-        <BulkUploadCandidates onSuccess={handleBulkUploadSuccess} />
-      </Box>
+      {/* Loading State */}
+      {loadingJobs ? (
+        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 5 }}>
+          <CircularProgress />
+        </Box>
+      ) : (
+        // Job Posts
+        <Box>
+          <Typography sx={commonStyles.sectionTitle}>Your Assigned Jobs</Typography>
+          <Grid container spacing={3}>
+            {jobPosts.length > 0 ? (
+              jobPosts.map((job) => (
+                <Grid item xs={12} sm={6} key={job.id}>
+                  <JobCard job={job} />
+                </Grid>
+              ))
+            ) : (
+              <Typography sx={commonStyles.subtitle}>No jobs assigned yet.</Typography>
+            )}
+          </Grid>
+        </Box>
+      )}
     </Paper>
   );
 };

@@ -60,64 +60,21 @@ export const getAllCandidates = async () => {
   }
 };
 
-// Bulk Create Multiple Candidates
-export const bulkCreateCandidates = async (bulkCandidates) => {
-  try {
-    const response = await axiosInstance.post('/bulk', bulkCandidates, {
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-    return response.data; // Array of created candidates
-  } catch (error) {
-    console.error('Error bulk creating candidates:', error);
-    throw error.message || 'Error bulk creating candidates';
-  }
-};
-
-// Assign Candidate to Positions
-export const assignCandidateToPositions = async (candidateId, positions) => {
-  try {
-    const payload = { positions };
-    const response = await axiosInstance.post(`/${candidateId}/assign`, payload, {
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-    return response.data; // Updated candidate object
-  } catch (error) {
-    console.error('Error assigning candidate to positions:', error);
-    throw error.message || 'Error assigning candidate to positions';
-  }
-};
-
-// Bulk Upload Resumes (Optional)
-export const bulkUploadResumes = async (resumeFiles) => {
+// Add Candidate: Create a new candidate with detailed payload and resume upload
+export const addCandidate = async (candidateData, resumeFile) => {
   try {
     const formData = new FormData();
-    
-    // Append each resume file
-    resumeFiles.forEach(file => {
-      formData.append('resumes', file);
+    Object.keys(candidateData).forEach((key) => {
+      if (Array.isArray(candidateData[key])) {
+        candidateData[key].forEach((item) => formData.append(`${key}[]`, item));
+      } else {
+        formData.append(key, candidateData[key]);
+      }
     });
-    
-    const response = await axiosInstance.post('/bulk-resume', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
-    
-    return response.data; // Map of upload results
-  } catch (error) {
-    console.error('Error bulk uploading resumes:', error);
-    throw error.message || 'Error bulk uploading resumes';
-  }
-};
+    if (resumeFile) {
+      formData.append('resume', resumeFile);
+    }
 
-// **Add the createCandidate function below**
-// Create a new candidate with detailed payload and resume upload
-export const createCandidate = async (formData) => {
-  try {
     const response = await axiosInstance.post('/', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
@@ -125,9 +82,51 @@ export const createCandidate = async (formData) => {
     });
     return response.data; // Assuming this returns the created candidate object
   } catch (error) {
-    console.error('Error creating candidate:', error);
-    throw error.response?.data || 'Error creating candidate';
+    console.error('Error adding candidate:', error);
+    throw error.response?.data || 'Error adding candidate';
   }
 };
 
-// Additional candidate service functions as needed
+// Assign Interview: Assigns an interview to a candidate.
+export const assignInterview = async (candidateId, interviewData) => {
+  try {
+    const response = await axiosInstance.post(`/${candidateId}/assign-interview`, interviewData);
+    return response.data; // Assuming this returns the updated candidate object with interview details
+  } catch (error) {
+    console.error('Error assigning interview:', error);
+    throw error.response?.data || 'Error assigning interview';
+  }
+};
+
+// Existing service functions...
+
+// Batch Add Candidates: Create multiple candidates with detailed payload and resume uploads
+export const addCandidates = async (candidates) => {
+  try {
+    // Create FormData for multiple candidates
+    const formData = new FormData();
+
+    candidates.forEach((candidate, index) => {
+      Object.keys(candidate).forEach((key) => {
+        if (key === 'resumeFile') {
+          formData.append(`candidates[${index}].resume`, candidate.resumeFile);
+        } else if (Array.isArray(candidate[key])) {
+          candidate[key].forEach((item) => formData.append(`candidates[${index}].${key}[]`, item));
+        } else {
+          formData.append(`candidates[${index}].${key}`, candidate[key]);
+        }
+      });
+    });
+
+    const response = await axiosInstance.post('/batch-add', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+
+    return response.data; // Assuming this returns an array of created candidate objects
+  } catch (error) {
+    console.error('Error adding candidates:', error);
+    throw error.response?.data || 'Error adding candidates.';
+  }
+};

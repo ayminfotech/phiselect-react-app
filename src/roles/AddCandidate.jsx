@@ -1,315 +1,364 @@
 // src/components/roles/AddCandidate.jsx
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import PropTypes from 'prop-types';
 import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Button,
+  Modal,
+  Box,
+  Typography,
   TextField,
-  Grid,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
+  Button,
   CircularProgress,
   Alert,
-  Typography,
+  Grid,
+  IconButton,
 } from '@mui/material';
-import PropTypes from 'prop-types';
-import { createCandidate } from '../services/candidateService'; // Implement this service
-import { getInterviewers } from '../services/interviewerService'; // Implement this service
+import { addCandidates } from '../services/candidateService'; // Updated service function
+import CloseIcon from '@mui/icons-material/Close';
+import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
+import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
+
+const modalStyle = {
+  position: 'absolute',
+  top: '50%',
+  left: '50%',
+  transform: 'translate(-50%, -50%)',
+  width: '95%',
+  maxWidth: 800,
+  bgcolor: 'background.paper',
+  borderRadius: 2,
+  boxShadow: 24,
+  p: 4,
+  maxHeight: '90vh',
+  overflowY: 'auto',
+};
+
+const initialCandidate = {
+  firstName: '',
+  lastName: '',
+  email: '',
+  phoneNumber: '',
+  currentCompany: '',
+  previousCompanies: '',
+  skillSet: '',
+  panCardNumber: '',
+  resumeFile: null,
+};
 
 const AddCandidate = ({ open, handleClose, jobId, positionId }) => {
-  const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    phoneNumber: '',
-    currentCompany: '',
-    previousCompanies: '',
-    skillSet: '',
-    appliedJobIds: [jobId],
-    jobRefIds: [], // You can populate this based on job data
-    tenantId: '',
-    panCardNumber: '',
-    resume: null,
-    interviewerId: '',
-  });
-  const [interviewers, setInterviewers] = useState([]);
+  const [candidates, setCandidates] = useState([{ ...initialCandidate }]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [successMessage, setSuccessMessage] = useState('');
 
-  // Fetch interviewers when the dialog opens
-  useEffect(() => {
-    if (open) {
-      fetchInterviewers();
+  // Handle input changes for each candidate
+  const handleInputChange = (index, event) => {
+    const { name, value } = event.target;
+    const updatedCandidates = [...candidates];
+    updatedCandidates[index][name] = value;
+    setCandidates(updatedCandidates);
+  };
+
+  // Handle file changes for each candidate
+  const handleFileChange = (index, event) => {
+    const file = event.target.files[0];
+    if (file) {
+      const updatedCandidates = [...candidates];
+      updatedCandidates[index].resumeFile = file;
+      setCandidates(updatedCandidates);
     }
-  }, [open]);
-
-  const fetchInterviewers = async () => {
-    try {
-      const response = await getInterviewers();
-      setInterviewers(response.data);
-    } catch (err) {
-      console.error('Failed to fetch interviewers:', err);
-      setError('Failed to load interviewers');
-    }
   };
 
-  const handleChange = (field, value) => {
-    setFormData((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
+  // Add a new candidate form
+  const handleAddCandidate = () => {
+    setCandidates([...candidates, { ...initialCandidate }]);
   };
 
-  const handleFileChange = (file) => {
-    setFormData((prev) => ({
-      ...prev,
-      resume: file,
-    }));
+  // Remove a candidate form
+  const handleRemoveCandidate = (index) => {
+    const updatedCandidates = [...candidates];
+    updatedCandidates.splice(index, 1);
+    setCandidates(updatedCandidates);
   };
 
-  const handleSubmit = async () => {
+  // Handle form submission
+  const handleSubmit = async (e) => {
+    e.preventDefault();
     setLoading(true);
     setError(null);
+    setSuccessMessage('');
 
-    // Validate required fields
-    const requiredFields = ['firstName', 'lastName', 'email', 'phoneNumber', 'interviewerId', 'resume'];
-    for (let field of requiredFields) {
-      if (!formData[field]) {
-        setError(`Please fill out the ${field} field.`);
+    // Basic client-side validation
+    for (let i = 0; i < candidates.length; i++) {
+      const { firstName, lastName, email, phoneNumber, resumeFile } = candidates[i];
+      if (!firstName || !lastName || !email || !phoneNumber || !resumeFile) {
+        setError(`Please fill in all required fields for Candidate ${i + 1}.`);
         setLoading(false);
         return;
       }
+      // Additional validations (e.g., email format) can be added here
     }
 
-    // Prepare form data for multipart request
-    const data = new FormData();
-    data.append('firstName', formData.firstName);
-    data.append('lastName', formData.lastName);
-    data.append('email', formData.email);
-    data.append('phoneNumber', formData.phoneNumber);
-    data.append('currentCompany', formData.currentCompany);
-    data.append('previousCompanies', formData.previousCompanies);
-    data.append('skillSet', formData.skillSet);
-    data.append('appliedJobIds', JSON.stringify(formData.appliedJobIds));
-    data.append('jobRefIds', JSON.stringify(formData.jobRefIds));
-    data.append('tenantId', formData.tenantId);
-    data.append('panCardNumber', formData.panCardNumber);
-    data.append('interviewerId', formData.interviewerId);
-    data.append('resume', formData.resume);
-
     try {
-      const response = await createCandidate(data);
-      handleClose(response.data); // Pass the created candidate back to parent
-      setFormData({
-        firstName: '',
-        lastName: '',
-        email: '',
-        phoneNumber: '',
-        currentCompany: '',
-        previousCompanies: '',
-        skillSet: '',
+      // Prepare payloads for all candidates
+      const payload = candidates.map((candidate) => ({
+        ...candidate,
         appliedJobIds: [jobId],
         jobRefIds: [],
-        tenantId: '',
-        panCardNumber: '',
-        resume: null,
-        interviewerId: '',
-      });
+        tenantId: '', // Assign appropriately
+      }));
+
+      // Call the batch add service
+      const createdCandidates = await addCandidates(payload);
+      setSuccessMessage(`${createdCandidates.length} candidate(s) added successfully!`);
+      handleClose(createdCandidates);
+      // Reset form
+      setCandidates([{ ...initialCandidate }]);
     } catch (err) {
-      console.error('Failed to create candidate:', err);
-      setError(err.response?.data?.message || 'Failed to create candidate');
+      setError(err.response?.data?.message || 'Failed to add candidates.');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleDialogClose = () => {
+  // Handle modal close
+  const handleModalClose = () => {
+    setCandidates([{ ...initialCandidate }]);
     setError(null);
-    setFormData({
-      firstName: '',
-      lastName: '',
-      email: '',
-      phoneNumber: '',
-      currentCompany: '',
-      previousCompanies: '',
-      skillSet: '',
-      appliedJobIds: [jobId],
-      jobRefIds: [],
-      tenantId: '',
-      panCardNumber: '',
-      resume: null,
-      interviewerId: '',
-    });
-    handleClose();
+    setSuccessMessage('');
+    handleClose(null);
   };
 
   return (
-    <Dialog open={open} onClose={handleDialogClose} maxWidth="md" fullWidth>
-      <DialogTitle>Add New Candidate</DialogTitle>
-      <DialogContent>
+    <Modal
+      open={open}
+      onClose={handleModalClose}
+      aria-labelledby="add-candidate-modal-title"
+      aria-describedby="add-candidate-modal-description"
+    >
+      <Box sx={modalStyle}>
+        {/* Header */}
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+          <Typography id="add-candidate-modal-title" variant="h6" component="h2">
+            Add New Candidate(s)
+          </Typography>
+          <IconButton onClick={handleModalClose} aria-label="close">
+            <CloseIcon />
+          </IconButton>
+        </Box>
+
+        {/* Success Alert */}
+        {successMessage && (
+          <Alert severity="success" sx={{ mb: 2 }}>
+            {successMessage}
+          </Alert>
+        )}
+
+        {/* Error Alert */}
         {error && (
           <Alert severity="error" sx={{ mb: 2 }}>
             {error}
           </Alert>
         )}
-        <Grid container spacing={2}>
-          {/* First Name */}
-          <Grid item xs={12} sm={6}>
-            <TextField
-              label="First Name"
-              variant="outlined"
-              value={formData.firstName}
-              onChange={(e) => handleChange('firstName', e.target.value)}
-              required
-              fullWidth
-            />
-          </Grid>
-          {/* Last Name */}
-          <Grid item xs={12} sm={6}>
-            <TextField
-              label="Last Name"
-              variant="outlined"
-              value={formData.lastName}
-              onChange={(e) => handleChange('lastName', e.target.value)}
-              required
-              fullWidth
-            />
-          </Grid>
-          {/* Email */}
-          <Grid item xs={12} sm={6}>
-            <TextField
-              label="Email"
-              variant="outlined"
-              type="email"
-              value={formData.email}
-              onChange={(e) => handleChange('email', e.target.value)}
-              required
-              fullWidth
-            />
-          </Grid>
-          {/* Phone Number */}
-          <Grid item xs={12} sm={6}>
-            <TextField
-              label="Phone Number"
-              variant="outlined"
-              type="tel"
-              value={formData.phoneNumber}
-              onChange={(e) => handleChange('phoneNumber', e.target.value)}
-              required
-              fullWidth
-            />
-          </Grid>
-          {/* Current Company */}
-          <Grid item xs={12} sm={6}>
-            <TextField
-              label="Current Company"
-              variant="outlined"
-              value={formData.currentCompany}
-              onChange={(e) => handleChange('currentCompany', e.target.value)}
-              fullWidth
-            />
-          </Grid>
-          {/* Previous Companies */}
-          <Grid item xs={12} sm={6}>
-            <TextField
-              label="Previous Companies"
-              variant="outlined"
-              value={formData.previousCompanies}
-              onChange={(e) => handleChange('previousCompanies', e.target.value)}
-              fullWidth
-            />
-          </Grid>
-          {/* Skill Set */}
-          <Grid item xs={12}>
-            <TextField
-              label="Skill Set"
-              variant="outlined"
-              value={formData.skillSet}
-              onChange={(e) => handleChange('skillSet', e.target.value)}
-              fullWidth
-            />
-          </Grid>
-          {/* Tenant ID */}
-          <Grid item xs={12} sm={6}>
-            <TextField
-              label="Tenant ID"
-              variant="outlined"
-              value={formData.tenantId}
-              onChange={(e) => handleChange('tenantId', e.target.value)}
-              fullWidth
-            />
-          </Grid>
-          {/* PAN Card Number */}
-          <Grid item xs={12} sm={6}>
-            <TextField
-              label="PAN Card Number"
-              variant="outlined"
-              value={formData.panCardNumber}
-              onChange={(e) => handleChange('panCardNumber', e.target.value)}
-              fullWidth
-            />
-          </Grid>
-          {/* Assign Interviewer */}
-          <Grid item xs={12} sm={6}>
-            <FormControl variant="outlined" fullWidth required>
-              <InputLabel id="interviewer-label">Assign Interviewer</InputLabel>
-              <Select
-                labelId="interviewer-label"
-                label="Assign Interviewer"
-                value={formData.interviewerId}
-                onChange={(e) => handleChange('interviewerId', e.target.value)}
-              >
-                <MenuItem value="">
-                  <em>None</em>
-                </MenuItem>
-                {interviewers.map((interviewer) => (
-                  <MenuItem key={interviewer.id} value={interviewer.id}>
-                    {interviewer.name}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Grid>
-          {/* Resume Upload */}
-          <Grid item xs={12} sm={6}>
-            <Button variant="contained" component="label" fullWidth>
-              Upload Resume
-              <input
-                type="file"
-                accept=".pdf,.doc,.docx"
-                hidden
-                onChange={(e) => {
-                  if (e.target.files.length > 0) {
-                    handleFileChange(e.target.files[0]);
-                  }
-                }}
-                required
-              />
+
+        {/* Form */}
+        <form onSubmit={handleSubmit}>
+          {candidates.map((candidate, index) => (
+            <Box key={index} sx={{ mb: 4, p: 2, border: '1px solid #eee', borderRadius: 2 }}>
+              <Grid container spacing={2} alignItems="center">
+                {/* First Name */}
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    label="First Name"
+                    name="firstName"
+                    value={candidate.firstName}
+                    onChange={(e) => handleInputChange(index, e)}
+                    fullWidth
+                    required
+                    variant="outlined"
+                  />
+                </Grid>
+
+                {/* Last Name */}
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    label="Last Name"
+                    name="lastName"
+                    value={candidate.lastName}
+                    onChange={(e) => handleInputChange(index, e)}
+                    fullWidth
+                    required
+                    variant="outlined"
+                  />
+                </Grid>
+
+                {/* Email */}
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    label="Email"
+                    name="email"
+                    type="email"
+                    value={candidate.email}
+                    onChange={(e) => handleInputChange(index, e)}
+                    fullWidth
+                    required
+                    variant="outlined"
+                  />
+                </Grid>
+
+                {/* Phone Number */}
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    label="Phone Number"
+                    name="phoneNumber"
+                    type="tel"
+                    value={candidate.phoneNumber}
+                    onChange={(e) => handleInputChange(index, e)}
+                    fullWidth
+                    required
+                    variant="outlined"
+                  />
+                </Grid>
+
+                {/* Current Company */}
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    label="Current Company"
+                    name="currentCompany"
+                    value={candidate.currentCompany}
+                    onChange={(e) => handleInputChange(index, e)}
+                    fullWidth
+                    variant="outlined"
+                  />
+                </Grid>
+
+                {/* Previous Companies */}
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    label="Previous Companies"
+                    name="previousCompanies"
+                    value={candidate.previousCompanies}
+                    onChange={(e) => handleInputChange(index, e)}
+                    fullWidth
+                    variant="outlined"
+                    helperText="Separate multiple companies with commas"
+                  />
+                </Grid>
+
+                {/* Skill Set */}
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    label="Skill Set"
+                    name="skillSet"
+                    value={candidate.skillSet}
+                    onChange={(e) => handleInputChange(index, e)}
+                    fullWidth
+                    variant="outlined"
+                    helperText="e.g., Java, Spring Boot"
+                  />
+                </Grid>
+
+                {/* PAN Card Number */}
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    label="PAN Card Number"
+                    name="panCardNumber"
+                    value={candidate.panCardNumber}
+                    onChange={(e) => handleInputChange(index, e)}
+                    fullWidth
+                    variant="outlined"
+                  />
+                </Grid>
+
+                {/* Resume Upload */}
+                <Grid item xs={12}>
+                  <Button
+                    variant="contained"
+                    component="label"
+                    startIcon={<CloudUploadIcon />}
+                    fullWidth
+                    sx={{ textTransform: 'none' }}
+                  >
+                    {candidate.resumeFile ? 'Change Resume' : 'Upload Resume'}
+                    <input
+                      type="file"
+                      hidden
+                      accept=".pdf,.doc,.docx"
+                      onChange={(e) => handleFileChange(index, e)}
+                    />
+                  </Button>
+                  {candidate.resumeFile && (
+                    <Box sx={{ mt: 1, display: 'flex', alignItems: 'center' }}>
+                      <Typography variant="body2" sx={{ flexGrow: 1 }}>
+                        {candidate.resumeFile.name}
+                      </Typography>
+                      <IconButton
+                        color="error"
+                        size="small"
+                        onClick={() => {
+                          const updatedCandidates = [...candidates];
+                          updatedCandidates[index].resumeFile = null;
+                          setCandidates(updatedCandidates);
+                        }}
+                        aria-label="remove resume"
+                      >
+                        <RemoveCircleOutlineIcon />
+                      </IconButton>
+                    </Box>
+                  )}
+                </Grid>
+
+                {/* Remove Candidate Button */}
+                {candidates.length > 1 && (
+                  <Grid item xs={12}>
+                    <Button
+                      variant="outlined"
+                      color="error"
+                      startIcon={<RemoveCircleOutlineIcon />}
+                      onClick={() => handleRemoveCandidate(index)}
+                      sx={{ textTransform: 'none' }}
+                    >
+                      Remove Candidate
+                    </Button>
+                  </Grid>
+                )}
+              </Grid>
+            </Box>
+          ))}
+
+          {/* Add More Candidates Button */}
+          <Button
+            variant="outlined"
+            startIcon={<AddCircleOutlineIcon />}
+            onClick={handleAddCandidate}
+            sx={{ mb: 2, textTransform: 'none' }}
+          >
+            Add Another Candidate
+          </Button>
+
+          {/* Submit Button */}
+          <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3 }}>
+            <Button onClick={handleModalClose} sx={{ mr: 2, textTransform: 'none' }}>
+              Cancel
             </Button>
-            {formData.resume && (
-              <Typography variant="body2" sx={{ mt: 1 }}>
-                {formData.resume.name}
-              </Typography>
-            )}
-          </Grid>
-        </Grid>
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={handleDialogClose} color="secondary">
-          Cancel
-        </Button>
-        <Button onClick={handleSubmit} variant="contained" color="primary" disabled={loading}>
-          {loading ? <CircularProgress size={24} /> : 'Add Candidate'}
-        </Button>
-      </DialogActions>
-    </Dialog>
-  );
-};
+            <Button
+              type="submit"
+              variant="contained"
+              color="primary"
+              disabled={loading}
+              startIcon={loading && <CircularProgress size={20} />}
+              sx={{ textTransform: 'none' }}
+            >
+              {loading ? 'Adding...' : 'Add Candidates'}
+            </Button>
+          </Box>
+        </form>
+      </Box>
+    </Modal>
+  ); // End of return statement
+
+}; // End of AddCandidate function
 
 AddCandidate.propTypes = {
   open: PropTypes.bool.isRequired,

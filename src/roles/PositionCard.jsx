@@ -1,259 +1,114 @@
-// src/components/roles/PositionCard.jsx
-
 import React, { useState } from 'react';
-import { 
-  Box, 
-  Typography, 
-  Button, 
-  TextField, 
-  Tooltip,
-  CircularProgress,
-  Alert,
+import {
+  Box,
+  Typography,
+  Button,
+  Collapse,
+  IconButton,
   List,
   ListItem,
   ListItemText,
-  InputAdornment,
-  Collapse,
+  Alert,
+  CircularProgress,
+  Divider,
 } from '@mui/material';
-import PersonAddIcon from '@mui/icons-material/PersonAdd';
-import SearchIcon from '@mui/icons-material/Search';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import ExpandLessIcon from '@mui/icons-material/ExpandLess';
-import PropTypes from 'prop-types';
-import { sourceCandidate, getCandidatesByPosition, searchCandidates } from '../services/candidateService';
+import { ExpandMore, ExpandLess, Delete } from '@mui/icons-material';
 import AddCandidate from './AddCandidate';
+import PropTypes from 'prop-types';
+import commonStyles from '../styles/commonStyles';
 
 const PositionCard = ({ jobId, position, jobTitle }) => {
-  const [candidateName, setCandidateName] = useState('');
+  const [openCandidates, setOpenCandidates] = useState(false);
   const [candidates, setCandidates] = useState([]);
-  const [sourcing, setSourcing] = useState(false);
-  const [loadingCandidates, setLoadingCandidates] = useState(false);
-  const [error, setError] = useState(null);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [searching, setSearching] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
   const [openAddCandidate, setOpenAddCandidate] = useState(false);
-  const [openCandidates, setOpenCandidates] = useState(false); // State to control candidates section
 
-  const fetchCandidates = async (query = '') => {
-    setLoadingCandidates(true);
-    try {
-      const fetchedCandidates = await getCandidatesByPosition(jobId, position.positionId, query);
-      setCandidates(fetchedCandidates);
-    } catch (err) {
-      setError(err.message || 'Failed to fetch candidates');
-    } finally {
-      setLoadingCandidates(false);
-    }
-  };
+  const handleToggleCandidates = () => setOpenCandidates(!openCandidates);
 
-  const handleSourceCandidate = async () => {
-    if (candidateName.trim()) {
-      setSourcing(true);
-      setError(null);
-      try {
-        const newCandidate = await sourceCandidate(jobId, position.positionId, candidateName.trim());
-        setCandidates((prev) => [...prev, newCandidate]);
-        setCandidateName('');
-      } catch (err) {
-        setError(err.message || 'Failed to source candidate');
-      } finally {
-        setSourcing(false);
-      }
-    }
-  };
-
-  const handleSearch = async (e) => {
-    e.preventDefault();
-    if (!searchQuery.trim()) return;
-    setSearching(true);
-    try {
-      const searchedCandidates = await searchCandidates(jobId, position.positionId, searchQuery.trim());
-      setCandidates(searchedCandidates);
-    } catch (err) {
-      setError(err.message || 'Failed to search candidates');
-    } finally {
-      setSearching(false);
-    }
-  };
-
-  const handleClearSearch = () => {
-    setSearchQuery('');
-    fetchCandidates();
-  };
-
-  const handleOpenAddCandidate = () => {
-    setOpenAddCandidate(true);
-  };
-
-  const handleCloseAddCandidate = (createdCandidate) => {
+  const handleAddCandidatesClose = (newCandidates) => {
     setOpenAddCandidate(false);
-    if (createdCandidate) {
-      setCandidates((prev) => [...prev, createdCandidate]);
+    if (newCandidates && newCandidates.length > 0) {
+      setCandidates((prev) => [...prev, ...newCandidates]);
+      setSuccessMessage(`${newCandidates.length} candidate(s) added successfully!`);
     }
   };
 
-  const toggleCandidates = () => {
-    if (!openCandidates) {
-      // Fetch candidates only when expanding
-      fetchCandidates();
-    }
-    setOpenCandidates(!openCandidates);
+  const handleDeleteCandidate = (candidateId) => {
+    setCandidates((prev) => prev.filter((candidate) => candidate.id !== candidateId));
+    setSuccessMessage('Candidate removed successfully!');
   };
 
   return (
-    <Box
-      sx={{
-        p: 2,
-        border: '1px solid #ddd',
-        borderRadius: 2,
-        backgroundColor: '#fff',
-        height: '100%',
-        display: 'flex',
-        flexDirection: 'column',
-      }}
-    >
-      {/* Header with Position Code and Toggle Button */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-          {position.positionCode}
-        </Typography>
-        <Button
-          size="small"
-          onClick={toggleCandidates}
-          startIcon={openCandidates ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-        >
-          {openCandidates ? 'Hide Candidates' : 'View Candidates'}
-        </Button>
+    <Box sx={{ ...commonStyles.card, p: 2, mb: 2 }}>
+      {/* Position Header */}
+      <Box display="flex" justifyContent="space-between" alignItems="center">
+        <Typography sx={commonStyles.header}>{position.positionCode}</Typography>
+        <IconButton onClick={handleToggleCandidates}>
+          {openCandidates ? <ExpandLess /> : <ExpandMore />}
+        </IconButton>
       </Box>
-      <Typography variant="body2" color="textSecondary" sx={{ mb: 1 }}>
+      <Typography sx={commonStyles.subtitle} mb={1}>
         Status: {position.status}
       </Typography>
+      <Divider />
 
-      {error && (
-        <Alert severity="error" sx={{ mb: 1 }}>
-          {error}
+      {/* Success Message */}
+      {successMessage && (
+        <Alert severity="success" sx={{ mt: 2 }}>
+          {successMessage}
         </Alert>
       )}
 
-      {/* Sourcing Section */}
-      <Box sx={{ mt: 1 }}>
-        <TextField
-          label="Candidate Name"
-          variant="outlined"
-          value={candidateName}
-          onChange={(e) => setCandidateName(e.target.value)}
+      {/* Add Candidates Button */}
+      <Box mt={2}>
+        <Button
+          variant="contained"
+          color="primary"
           fullWidth
-          placeholder="e.g., Jane Doe"
-          size="small"
-          InputProps={{
-            endAdornment: (
-              <Tooltip title="Enter the candidate’s full name.">
-                <PersonAddIcon color="action" />
-              </Tooltip>
-            ),
-          }}
-        />
-        <Button 
-          variant="contained" 
-          color="primary" 
-          onClick={handleSourceCandidate}
-          sx={{ mt: 1, fontWeight: 'bold', whiteSpace: 'nowrap' }}
-          disabled={sourcing}
-          fullWidth
+          onClick={() => setOpenAddCandidate(true)}
+          sx={commonStyles.button}
         >
-          {sourcing ? <CircularProgress size={24} /> : 'Source Candidate'}
-        </Button>
-        <Button 
-          variant="outlined" 
-          color="secondary" 
-          onClick={handleOpenAddCandidate}
-          sx={{ mt: 1, fontWeight: 'bold', whiteSpace: 'nowrap' }}
-          fullWidth
-        >
-          Add Candidate
+          Add Candidates
         </Button>
       </Box>
 
-      {/* Search Section */}
-      <Box component="form" onSubmit={handleSearch} sx={{ mt: 2 }}>
-        <TextField
-          label="Search Candidates"
-          variant="outlined"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          fullWidth
-          placeholder="Search by name..."
-          size="small"
-          InputProps={{
-            endAdornment: (
-              <InputAdornment position="end">
-                <Tooltip title="Search candidates by name">
-                  <SearchIcon />
-                </Tooltip>
-              </InputAdornment>
-            ),
-          }}
-        />
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 1 }}>
-          <Button 
-            variant="contained" 
-            color="secondary" 
-            onClick={handleClearSearch}
-            disabled={!searchQuery}
-            sx={{ fontWeight: 'bold', whiteSpace: 'nowrap' }}
-          >
-            Clear
-          </Button>
-          <Button 
-            type="submit"
-            variant="contained" 
-            color="primary" 
-            disabled={searching}
-            sx={{ fontWeight: 'bold', whiteSpace: 'nowrap' }}
-          >
-            {searching ? <CircularProgress size={24} /> : 'Search'}
-          </Button>
-        </Box>
-      </Box>
-
-      {/* Candidates List */}
+      {/* Candidates Section */}
       <Collapse in={openCandidates} timeout="auto" unmountOnExit>
-        <Box sx={{ mt: 2, flexGrow: 1, overflowY: 'auto' }}>
-          <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 1 }}>
-            Sourced Candidates
-          </Typography>
-          {loadingCandidates ? (
-            <CircularProgress size={24} />
+        <Box mt={2}>
+          <Typography sx={commonStyles.sectionTitle}>Sourced Candidates</Typography>
+          {loading ? (
+            <CircularProgress size={24} sx={{ mt: 2 }} />
           ) : candidates.length > 0 ? (
-            <List dense>
+            <List>
               {candidates.map((candidate) => (
-                <ListItem key={candidate.id}>
-                  <ListItemText 
-                    primary={candidate.firstName + ' ' + candidate.lastName} 
-                    secondary={`Email: ${candidate.email} | Phone: ${candidate.phoneNumber}`}
+                <ListItem key={candidate.id} divider>
+                  <ListItemText
+                    primary={candidate.name}
+                    secondary={`Email: ${candidate.email}`}
                   />
+                  <IconButton edge="end" color="error" onClick={() => handleDeleteCandidate(candidate.id)}>
+                    <Delete />
+                  </IconButton>
                 </ListItem>
               ))}
             </List>
           ) : (
-            <Typography variant="body2" color="text.secondary">
-              No candidates sourced yet.
-            </Typography>
+            <Typography sx={commonStyles.subtitle}>No candidates sourced yet.</Typography>
           )}
         </Box>
       </Collapse>
 
-      {/* AddCandidate Component */}
-      <AddCandidate 
-        open={openAddCandidate} 
-        handleClose={handleCloseAddCandidate} 
-        jobId={jobId} 
-        positionId={position.positionId} 
+      {/* Add Candidate Modal */}
+      <AddCandidate
+        open={openAddCandidate}
+        handleClose={handleAddCandidatesClose}
+        jobId={jobId}
+        positionId={position.positionId}
       />
     </Box>
-  ); // End of return
-
-}; // End of PositionCard component
+  );
+};
 
 PositionCard.propTypes = {
   jobId: PropTypes.string.isRequired,
@@ -262,7 +117,7 @@ PositionCard.propTypes = {
     positionCode: PropTypes.string.isRequired,
     status: PropTypes.string.isRequired,
   }).isRequired,
-  jobTitle: PropTypes.string, // Optional prop
+  jobTitle: PropTypes.string,
 };
 
 export default PositionCard;
