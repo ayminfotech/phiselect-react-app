@@ -11,9 +11,14 @@ import {
   Alert,
   CircularProgress,
   Divider,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
 } from '@mui/material';
 import { ExpandMore, ExpandLess, Delete } from '@mui/icons-material';
 import AddCandidate from './AddCandidate';
+import ScheduleInterviewModal from './ScheduleInterviewModal';  // Import the new modal
 import PropTypes from 'prop-types';
 import commonStyles from '../styles/commonStyles';
 
@@ -23,6 +28,8 @@ const PositionCard = ({ jobId, position, jobTitle }) => {
   const [loading, setLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
   const [openAddCandidate, setOpenAddCandidate] = useState(false);
+  const [openViewCandidates, setOpenViewCandidates] = useState(false);
+  const [openScheduleInterview, setOpenScheduleInterview] = useState(false);  // Manage interview modal
 
   const handleToggleCandidates = () => setOpenCandidates(!openCandidates);
 
@@ -37,6 +44,14 @@ const PositionCard = ({ jobId, position, jobTitle }) => {
   const handleDeleteCandidate = (candidateId) => {
     setCandidates((prev) => prev.filter((candidate) => candidate.id !== candidateId));
     setSuccessMessage('Candidate removed successfully!');
+  };
+
+  const handleViewCandidatesClose = () => {
+    setOpenViewCandidates(false);
+  };
+
+  const handleScheduleInterviewClose = () => {
+    setOpenScheduleInterview(false);
   };
 
   return (
@@ -73,6 +88,32 @@ const PositionCard = ({ jobId, position, jobTitle }) => {
         </Button>
       </Box>
 
+      {/* View Candidates Button */}
+      <Box mt={2}>
+        <Button
+          variant="contained"
+          color="secondary"
+          fullWidth
+          onClick={() => setOpenViewCandidates(true)}
+          sx={commonStyles.button}
+        >
+          View Candidates
+        </Button>
+      </Box>
+
+      {/* Schedule Interview Button */}
+      <Box mt={2}>
+        <Button
+          variant="contained"
+          color="success"
+          fullWidth
+          onClick={() => setOpenScheduleInterview(true)}  // Open schedule interview modal
+          sx={commonStyles.button}
+        >
+          Schedule Interview
+        </Button>
+      </Box>
+
       {/* Candidates Section */}
       <Collapse in={openCandidates} timeout="auto" unmountOnExit>
         <Box mt={2}>
@@ -104,6 +145,40 @@ const PositionCard = ({ jobId, position, jobTitle }) => {
         open={openAddCandidate}
         handleClose={handleAddCandidatesClose}
         jobId={jobId}
+        positionId={position.positionId}
+      />
+
+      {/* View Candidates Modal */}
+      <Dialog open={openViewCandidates} onClose={handleViewCandidatesClose}>
+        <DialogTitle>View Candidates for Position</DialogTitle>
+        <DialogContent>
+          {candidates.length > 0 ? (
+            <List>
+              {candidates.map((candidate) => (
+                <ListItem key={candidate.id}>
+                  <ListItemText
+                    primary={`${candidate.firstName} ${candidate.lastName}`}
+                    secondary={`Email: ${candidate.email} | Phone: ${candidate.phoneNumber}`}
+                  />
+                </ListItem>
+              ))}
+            </List>
+          ) : (
+            <Typography>No candidates available for this position.</Typography>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleViewCandidatesClose} color="primary">
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Schedule Interview Modal */}
+      <ScheduleInterviewModal
+        open={openScheduleInterview}
+        onClose={handleScheduleInterviewClose}
+        candidateId={candidates[0]?.id} // assuming we can get the first candidate for now
         positionId={position.positionId}
       />
     </Box>

@@ -1,19 +1,19 @@
-// src/components/roles/AddCandidate.jsx
-
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import {
   Modal,
   Box,
   Typography,
-  TextField,
   Button,
   CircularProgress,
   Alert,
   Grid,
   IconButton,
+  TextField,
 } from '@mui/material';
-import { addCandidates } from '../services/candidateService'; // Updated service function
+import { Formik, Form, Field, FieldArray } from 'formik';
+import * as Yup from 'yup';
+import { addCandidates } from '../services/candidateService';
 import CloseIcon from '@mui/icons-material/Close';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
@@ -34,101 +34,79 @@ const modalStyle = {
   overflowY: 'auto',
 };
 
-const initialCandidate = {
-  firstName: '',
-  lastName: '',
-  email: '',
-  phoneNumber: '',
-  currentCompany: '',
-  previousCompanies: '',
-  skillSet: '',
-  panCardNumber: '',
-  resumeFile: null,
-};
+const CandidateSchema = Yup.object().shape({
+  firstName: Yup.string().required('First name is required'),
+  lastName: Yup.string().required('Last name is required'),
+  email: Yup.string().email('Invalid email').required('Email is required'),
+  phoneNumber: Yup.string()
+    .matches(/^[0-9]{10}$/, 'Phone number must be exactly 10 digits')
+    .required('Phone number is required'),
+  panCardNumber: Yup.string().required('PAN card number is required'),
+  // Add other validations as needed
+});
 
 const AddCandidate = ({ open, handleClose, jobId, positionId }) => {
-  const [candidates, setCandidates] = useState([{ ...initialCandidate }]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [successMessage, setSuccessMessage] = useState('');
-
-  // Handle input changes for each candidate
-  const handleInputChange = (index, event) => {
-    const { name, value } = event.target;
-    const updatedCandidates = [...candidates];
-    updatedCandidates[index][name] = value;
-    setCandidates(updatedCandidates);
+  const [successMessage, setSuccessMessage] = useState(null);
+  const [errorMessage, setErrorMessage] = useState(null); // <-- Define the error state here
+  const initialValues = {
+    candidates: [
+      {
+        firstName: '',
+        lastName: '',
+        email: '',
+        phoneNumber: '',
+        currentCompany: '',
+        previousCompanies: '',
+        skillSet: '',
+        panCardNumber: '',
+        recruiterRefId: 'RECRUITER_001', // Replace with actual recruiter ID
+        appliedPositionIds: positionId, // Assuming single position
+        resumeFile: null,
+      },
+    ],
   };
 
-  // Handle file changes for each candidate
-  const handleFileChange = (index, event) => {
-    const file = event.target.files[0];
-    if (file) {
-      const updatedCandidates = [...candidates];
-      updatedCandidates[index].resumeFile = file;
-      setCandidates(updatedCandidates);
-    }
-  };
-
-  // Add a new candidate form
-  const handleAddCandidate = () => {
-    setCandidates([...candidates, { ...initialCandidate }]);
-  };
-
-  // Remove a candidate form
-  const handleRemoveCandidate = (index) => {
-    const updatedCandidates = [...candidates];
-    updatedCandidates.splice(index, 1);
-    setCandidates(updatedCandidates);
-  };
-
-  // Handle form submission
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
-    setSuccessMessage('');
-
-    // Basic client-side validation
-    for (let i = 0; i < candidates.length; i++) {
-      const { firstName, lastName, email, phoneNumber, resumeFile } = candidates[i];
-      if (!firstName || !lastName || !email || !phoneNumber || !resumeFile) {
-        setError(`Please fill in all required fields for Candidate ${i + 1}.`);
-        setLoading(false);
-        return;
-      }
-      // Additional validations (e.g., email format) can be added here
-    }
-
+  const handleSubmit = async (values, { setSubmitting, resetForm }) => {
     try {
-      // Prepare payloads for all candidates
-      const payload = candidates.map((candidate) => ({
-        ...candidate,
-        appliedJobIds: [jobId],
-        jobRefIds: [],
-        tenantId: '', // Assign appropriately
+      // Prepare the payload from the form values
+      const payload = values.candidates.map((candidate) => ({
+        firstName: candidate.firstName,
+        lastName: candidate.lastName,
+        email: candidate.email,
+        phoneNumber: candidate.phoneNumber,
+        currentCompany: candidate.currentCompany,
+        previousCompanies: candidate.previousCompanies,
+        skillSet: candidate.skillSet,
+        panCardNumber: candidate.panCardNumber,
+        recruiterRefId: candidate.recruiterRefId,
+        appliedPositionIds: candidate.appliedPositionIds,
       }));
 
-      // Call the batch add service
-      const createdCandidates = await addCandidates(payload);
-      setSuccessMessage(`${createdCandidates.length} candidate(s) added successfully!`);
-      handleClose(createdCandidates);
-      // Reset form
-      setCandidates([{ ...initialCandidate }]);
+      // Call the batch add service and pass success and error message setters
+      const createdCandidates = await addCandidates(values.candidates, setSuccessMessage, setErrorMessage);
+
+      // Check if the response is successful
+      if (createdCandidates) {
+        setSuccessMessage("Candidates added successfully!");
+        setErrorMessage(null); // Reset any previous errors
+        handleClose(createdCandidates); // Close the modal and pass data back to the parent
+        resetForm(); // Reset the form after submission
+      }
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to add candidates.');
+      // Error handling
+      console.error("Error adding candidates:", err);
+      setErrorMessage(err.message || 'Failed to add candidates.');
+      setSuccessMessage(null); // Reset any previous success messages
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
   };
 
-  // Handle modal close
+  // Modal close handler
   const handleModalClose = () => {
-    setCandidates([{ ...initialCandidate }]);
-    setError(null);
-    setSuccessMessage('');
-    handleClose(null);
+    handleClose(null); // Close the modal and reset form
   };
+
 
   return (
     <Modal
@@ -143,222 +121,322 @@ const AddCandidate = ({ open, handleClose, jobId, positionId }) => {
           <Typography id="add-candidate-modal-title" variant="h6" component="h2">
             Add New Candidate(s)
           </Typography>
-          <IconButton onClick={handleModalClose} aria-label="close">
+          <IconButton onClick={() => handleClose(null)} aria-label="close">
             <CloseIcon />
           </IconButton>
         </Box>
 
-        {/* Success Alert */}
+        {/* Success Message */}
         {successMessage && (
           <Alert severity="success" sx={{ mb: 2 }}>
             {successMessage}
           </Alert>
         )}
 
-        {/* Error Alert */}
-        {error && (
+        {/* Error Message */}
+        {errorMessage && (
           <Alert severity="error" sx={{ mb: 2 }}>
-            {error}
+            {errorMessage}
           </Alert>
         )}
 
-        {/* Form */}
-        <form onSubmit={handleSubmit}>
-          {candidates.map((candidate, index) => (
-            <Box key={index} sx={{ mb: 4, p: 2, border: '1px solid #eee', borderRadius: 2 }}>
-              <Grid container spacing={2} alignItems="center">
-                {/* First Name */}
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    label="First Name"
-                    name="firstName"
-                    value={candidate.firstName}
-                    onChange={(e) => handleInputChange(index, e)}
-                    fullWidth
-                    required
-                    variant="outlined"
-                  />
-                </Grid>
+        {/* Formik Form */}
+        <Formik
+          initialValues={initialValues}
+          validationSchema={Yup.object({
+            candidates: Yup.array().of(CandidateSchema),
+          })}
+          onSubmit={handleSubmit}
+        >
+          {({ values, errors, touched, handleChange, setFieldValue, isSubmitting }) => (
+            <Form>
+              <FieldArray name="candidates">
+                {({ push, remove }) => (
+                  <div>
+                    {values.candidates.map((candidate, index) => (
+                      <Box key={index} sx={{ mb: 4, p: 2, border: '1px solid #eee', borderRadius: 2 }}>
+                        <Grid container spacing={2} alignItems="center">
+                          {/* First Name */}
+                          <Grid item xs={12} sm={6}>
+                            <TextField
+                              label="First Name"
+                              name={`candidates[${index}].firstName`}
+                              value={candidate.firstName}
+                              onChange={handleChange}
+                              fullWidth
+                              required
+                              variant="outlined"
+                              error={
+                                touched.candidates &&
+                                touched.candidates[index] &&
+                                touched.candidates[index].firstName &&
+                                Boolean(errors.candidates && errors.candidates[index]?.firstName)
+                              }
+                              helperText={
+                                touched.candidates &&
+                                touched.candidates[index] &&
+                                touched.candidates[index].firstName &&
+                                errors.candidates &&
+                                errors.candidates[index]?.firstName
+                              }
+                            />
+                          </Grid>
 
-                {/* Last Name */}
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    label="Last Name"
-                    name="lastName"
-                    value={candidate.lastName}
-                    onChange={(e) => handleInputChange(index, e)}
-                    fullWidth
-                    required
-                    variant="outlined"
-                  />
-                </Grid>
+                          {/* Last Name */}
+                          <Grid item xs={12} sm={6}>
+                            <TextField
+                              label="Last Name"
+                              name={`candidates[${index}].lastName`}
+                              value={candidate.lastName}
+                              onChange={handleChange}
+                              fullWidth
+                              required
+                              variant="outlined"
+                              error={
+                                touched.candidates &&
+                                touched.candidates[index] &&
+                                touched.candidates[index].lastName &&
+                                Boolean(errors.candidates && errors.candidates[index]?.lastName)
+                              }
+                              helperText={
+                                touched.candidates &&
+                                touched.candidates[index] &&
+                                touched.candidates[index].lastName &&
+                                errors.candidates &&
+                                errors.candidates[index]?.lastName
+                              }
+                            />
+                          </Grid>
 
-                {/* Email */}
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    label="Email"
-                    name="email"
-                    type="email"
-                    value={candidate.email}
-                    onChange={(e) => handleInputChange(index, e)}
-                    fullWidth
-                    required
-                    variant="outlined"
-                  />
-                </Grid>
+                          {/* Email */}
+                          <Grid item xs={12} sm={6}>
+                            <TextField
+                              label="Email"
+                              name={`candidates[${index}].email`}
+                              type="email"
+                              value={candidate.email}
+                              onChange={handleChange}
+                              fullWidth
+                              required
+                              variant="outlined"
+                              error={
+                                touched.candidates &&
+                                touched.candidates[index] &&
+                                touched.candidates[index].email &&
+                                Boolean(errors.candidates && errors.candidates[index]?.email)
+                              }
+                              helperText={
+                                touched.candidates &&
+                                touched.candidates[index] &&
+                                touched.candidates[index].email &&
+                                errors.candidates &&
+                                errors.candidates[index]?.email
+                              }
+                            />
+                          </Grid>
 
-                {/* Phone Number */}
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    label="Phone Number"
-                    name="phoneNumber"
-                    type="tel"
-                    value={candidate.phoneNumber}
-                    onChange={(e) => handleInputChange(index, e)}
-                    fullWidth
-                    required
-                    variant="outlined"
-                  />
-                </Grid>
+                          {/* Phone Number */}
+                          <Grid item xs={12} sm={6}>
+                            <TextField
+                              label="Phone Number"
+                              name={`candidates[${index}].phoneNumber`}
+                              type="tel"
+                              value={candidate.phoneNumber}
+                              onChange={handleChange}
+                              fullWidth
+                              required
+                              variant="outlined"
+                              error={
+                                touched.candidates &&
+                                touched.candidates[index] &&
+                                touched.candidates[index].phoneNumber &&
+                                Boolean(errors.candidates && errors.candidates[index]?.phoneNumber)
+                              }
+                              helperText={
+                                touched.candidates &&
+                                touched.candidates[index] &&
+                                touched.candidates[index].phoneNumber &&
+                                errors.candidates &&
+                                errors.candidates[index]?.phoneNumber
+                              }
+                            />
+                          </Grid>
 
-                {/* Current Company */}
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    label="Current Company"
-                    name="currentCompany"
-                    value={candidate.currentCompany}
-                    onChange={(e) => handleInputChange(index, e)}
-                    fullWidth
-                    variant="outlined"
-                  />
-                </Grid>
+                          {/* Current Company */}
+                          <Grid item xs={12} sm={6}>
+                            <TextField
+                              label="Current Company"
+                              name={`candidates[${index}].currentCompany`}
+                              value={candidate.currentCompany}
+                              onChange={handleChange}
+                              fullWidth
+                              variant="outlined"
+                            />
+                          </Grid>
 
-                {/* Previous Companies */}
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    label="Previous Companies"
-                    name="previousCompanies"
-                    value={candidate.previousCompanies}
-                    onChange={(e) => handleInputChange(index, e)}
-                    fullWidth
-                    variant="outlined"
-                    helperText="Separate multiple companies with commas"
-                  />
-                </Grid>
+                          {/* Previous Companies */}
+                          <Grid item xs={12} sm={6}>
+                            <TextField
+                              label="Previous Companies"
+                              name={`candidates[${index}].previousCompanies`}
+                              value={candidate.previousCompanies}
+                              onChange={handleChange}
+                              fullWidth
+                              variant="outlined"
+                              helperText="Separate multiple companies with commas"
+                            />
+                          </Grid>
 
-                {/* Skill Set */}
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    label="Skill Set"
-                    name="skillSet"
-                    value={candidate.skillSet}
-                    onChange={(e) => handleInputChange(index, e)}
-                    fullWidth
-                    variant="outlined"
-                    helperText="e.g., Java, Spring Boot"
-                  />
-                </Grid>
+                          {/* Skill Set */}
+                          <Grid item xs={12} sm={6}>
+                            <TextField
+                              label="Skill Set"
+                              name={`candidates[${index}].skillSet`}
+                              value={candidate.skillSet}
+                              onChange={handleChange}
+                              fullWidth
+                              variant="outlined"
+                              helperText="e.g., Java, Spring Boot"
+                            />
+                          </Grid>
 
-                {/* PAN Card Number */}
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    label="PAN Card Number"
-                    name="panCardNumber"
-                    value={candidate.panCardNumber}
-                    onChange={(e) => handleInputChange(index, e)}
-                    fullWidth
-                    variant="outlined"
-                  />
-                </Grid>
+                          {/* PAN Card Number */}
+                          <Grid item xs={12} sm={6}>
+                            <TextField
+                              label="PAN Card Number"
+                              name={`candidates[${index}].panCardNumber`}
+                              value={candidate.panCardNumber}
+                              onChange={handleChange}
+                              fullWidth
+                              required
+                              variant="outlined"
+                              error={
+                                touched.candidates &&
+                                touched.candidates[index] &&
+                                touched.candidates[index].panCardNumber &&
+                                Boolean(errors.candidates && errors.candidates[index]?.panCardNumber)
+                              }
+                              helperText={
+                                touched.candidates &&
+                                touched.candidates[index] &&
+                                touched.candidates[index].panCardNumber &&
+                                errors.candidates &&
+                                errors.candidates[index]?.panCardNumber
+                              }
+                            />
+                          </Grid>
 
-                {/* Resume Upload */}
-                <Grid item xs={12}>
-                  <Button
-                    variant="contained"
-                    component="label"
-                    startIcon={<CloudUploadIcon />}
-                    fullWidth
-                    sx={{ textTransform: 'none' }}
-                  >
-                    {candidate.resumeFile ? 'Change Resume' : 'Upload Resume'}
-                    <input
-                      type="file"
-                      hidden
-                      accept=".pdf,.doc,.docx"
-                      onChange={(e) => handleFileChange(index, e)}
-                    />
-                  </Button>
-                  {candidate.resumeFile && (
-                    <Box sx={{ mt: 1, display: 'flex', alignItems: 'center' }}>
-                      <Typography variant="body2" sx={{ flexGrow: 1 }}>
-                        {candidate.resumeFile.name}
-                      </Typography>
-                      <IconButton
-                        color="error"
-                        size="small"
-                        onClick={() => {
-                          const updatedCandidates = [...candidates];
-                          updatedCandidates[index].resumeFile = null;
-                          setCandidates(updatedCandidates);
-                        }}
-                        aria-label="remove resume"
-                      >
-                        <RemoveCircleOutlineIcon />
-                      </IconButton>
-                    </Box>
-                  )}
-                </Grid>
+                          {/* Resume Upload */}
+                          <Grid item xs={12}>
+                            <Button
+                              variant="contained"
+                              component="label"
+                              startIcon={<CloudUploadIcon />}
+                              fullWidth
+                              sx={{ textTransform: 'none' }}
+                            >
+                              {candidate.resumeFile ? 'Change Resume' : 'Upload Resume'}
+                              <input
+                                type="file"
+                                hidden
+                                accept=".pdf,.doc,.docx"
+                                onChange={(event) => {
+                                  setFieldValue(`candidates[${index}].resumeFile`, event.currentTarget.files[0]);
+                                }}
+                              />
+                            </Button>
+                            {candidate.resumeFile && (
+                              <Box sx={{ mt: 1, display: 'flex', alignItems: 'center' }}>
+                                <Typography variant="body2" sx={{ flexGrow: 1 }}>
+                                  {candidate.resumeFile.name}
+                                </Typography>
+                                <IconButton
+                                  color="error"
+                                  size="small"
+                                  onClick={() => setFieldValue(`candidates[${index}].resumeFile`, null)}
+                                  aria-label="remove resume"
+                                >
+                                  <RemoveCircleOutlineIcon />
+                                </IconButton>
+                              </Box>
+                            )}
+                          </Grid>
 
-                {/* Remove Candidate Button */}
-                {candidates.length > 1 && (
-                  <Grid item xs={12}>
+                          {/* Remove Candidate Button */}
+                          {values.candidates.length > 1 && (
+                            <Grid item xs={12}>
+                              <Button
+                                variant="outlined"
+                                color="error"
+                                startIcon={<RemoveCircleOutlineIcon />}
+                                onClick={() => remove(index)}
+                                sx={{ textTransform: 'none' }}
+                              >
+                                Remove Candidate
+                              </Button>
+                            </Grid>
+                          )}
+                        </Grid>
+                      </Box>
+                    ))}
+
+                    {/* Add More Candidates Button */}
                     <Button
                       variant="outlined"
-                      color="error"
-                      startIcon={<RemoveCircleOutlineIcon />}
-                      onClick={() => handleRemoveCandidate(index)}
-                      sx={{ textTransform: 'none' }}
+                      startIcon={<AddCircleOutlineIcon />}
+                      onClick={() =>
+                        push({
+                          firstName: '',
+                          lastName: '',
+                          email: '',
+                          phoneNumber: '',
+                          currentCompany: '',
+                          previousCompanies: '',
+                          skillSet: '',
+                          panCardNumber: '',
+                          recruiterRefId: 'RECRUITER_001',
+                          appliedPositionIds: positionId,
+                          resumeFile: null,
+                        })
+                      }
+                      sx={{ mb: 2, textTransform: 'none' }}
                     >
-                      Remove Candidate
+                      Add Another Candidate
                     </Button>
-                  </Grid>
+                  </div>
                 )}
-              </Grid>
-            </Box>
-          ))}
+              </FieldArray>
 
-          {/* Add More Candidates Button */}
-          <Button
-            variant="outlined"
-            startIcon={<AddCircleOutlineIcon />}
-            onClick={handleAddCandidate}
-            sx={{ mb: 2, textTransform: 'none' }}
-          >
-            Add Another Candidate
-          </Button>
+              {/* Submit Button */}
+              <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3 }}>
+                <Button type="button" onClick={handleModalClose} sx={{ mr: 2, textTransform: 'none' }}>
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  variant="contained"
+                  color="primary"
+                  disabled={isSubmitting}
+                  startIcon={isSubmitting && <CircularProgress size={20} />}
+                  sx={{ textTransform: 'none' }}
+                >
+                  {isSubmitting ? 'Adding...' : 'Add Candidates'}
+                </Button>
+              </Box>
 
-          {/* Submit Button */}
-          <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3 }}>
-            <Button onClick={handleModalClose} sx={{ mr: 2, textTransform: 'none' }}>
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              variant="contained"
-              color="primary"
-              disabled={loading}
-              startIcon={loading && <CircularProgress size={20} />}
-              sx={{ textTransform: 'none' }}
-            >
-              {loading ? 'Adding...' : 'Add Candidates'}
-            </Button>
-          </Box>
-        </form>
+              {/* Submission Error */}
+              {errors.submit && (
+                <Alert severity="error" sx={{ mt: 2 }}>
+                  {errors.submit}
+                </Alert>
+              )}
+            </Form>
+          )}
+        </Formik>
       </Box>
     </Modal>
-  ); // End of return statement
-
-}; // End of AddCandidate function
+  );
+};
 
 AddCandidate.propTypes = {
   open: PropTypes.bool.isRequired,

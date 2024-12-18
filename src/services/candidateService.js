@@ -1,5 +1,4 @@
 // src/services/candidateService.js
-
 import axios from 'axios';
 
 const API_BASE_URL = 'http://localhost:8380/api/candidates';
@@ -21,42 +20,6 @@ export const getCandidatesByPosition = async (jobId, positionId, searchQuery = '
   } catch (error) {
     console.error('Error fetching candidates by position:', error);
     throw error.response?.data || 'Error fetching candidates by position';
-  }
-};
-
-// Search candidates within a specific job and position
-export const searchCandidates = async (jobId, positionId, query) => {
-  try {
-    const response = await axiosInstance.get('/', {
-      params: { jobId, positionId, search: query },
-    });
-    return response.data; // Assuming this returns an array of candidates matching the search
-  } catch (error) {
-    console.error('Error searching candidates:', error);
-    throw error.response?.data || 'Error searching candidates';
-  }
-};
-
-// Source a new candidate for a specific job and position
-export const sourceCandidate = async (jobId, positionId, candidateName) => {
-  try {
-    const payload = { jobId, positionId, name: candidateName };
-    const response = await axiosInstance.post('/', payload);
-    return response.data; // Assuming this returns the newly created candidate object
-  } catch (error) {
-    console.error('Error sourcing candidate:', error);
-    throw error.response?.data || 'Error sourcing candidate';
-  }
-};
-
-// Optional: Fetch all candidates (if needed elsewhere in your application)
-export const getAllCandidates = async () => {
-  try {
-    const response = await axiosInstance.get('/');
-    return response.data; // Assuming this returns an array of all candidates
-  } catch (error) {
-    console.error('Error fetching all candidates:', error);
-    throw error.response?.data || 'Error fetching all candidates';
   }
 };
 
@@ -87,6 +50,67 @@ export const addCandidate = async (candidateData, resumeFile) => {
   }
 };
 
+export const addCandidates = async (candidates, setSuccessMessage, setErrorMessage) => {
+  try {
+    const formData = new FormData();
+
+    // Prepare candidate data
+    const candidateData = candidates.map((candidate) => ({
+      firstName: candidate.firstName,
+      lastName: candidate.lastName,
+      email: candidate.email,
+      phoneNumber: candidate.phoneNumber,
+      currentCompany: candidate.currentCompany,
+      previousCompanies: candidate.previousCompanies,
+      skillSet: candidate.skillSet,
+      panCardNumber: candidate.panCardNumber,
+      recruiterRefId: candidate.recruiterRefId,
+      appliedPositionIds: [candidate.appliedPositionIds],
+    }));
+
+    // Append data to FormData
+    formData.append('candidates', JSON.stringify(candidateData));
+
+    // Append resume files
+    candidates.forEach((candidate) => {
+      if (candidate.resumeFile) {
+        formData.append('resumes', candidate.resumeFile);
+      }
+    });
+
+    const response = await axiosInstance.post('/batch-add', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+
+    // Check for successful creation
+    if (response.status === 201) {
+      setSuccessMessage('Candidates added successfully!');
+      console.log('Created candidates:', response.data.candidates); // Log created candidates
+    }
+
+    // Return the created candidate data
+    return response.data.candidates;
+  } catch (error) {
+    console.error('Error adding candidates:', error);
+
+    // Handle error properly based on status code
+    if (error.response) {
+      if (error.response.status === 400 || error.response.status === 500) {
+        setErrorMessage(error.response.data.error || 'An error occurred while adding candidates.');
+      } else {
+        setErrorMessage('Unexpected error occurred.');
+      }
+    } else {
+      setErrorMessage('Network error or server not reachable.');
+    }
+
+    // Optionally, throw the error to be handled by UI
+    throw error.response?.data || 'Error adding candidates.';
+  }
+};
+
 // Assign Interview: Assigns an interview to a candidate.
 export const assignInterview = async (candidateId, interviewData) => {
   try {
@@ -98,35 +122,13 @@ export const assignInterview = async (candidateId, interviewData) => {
   }
 };
 
-// Existing service functions...
-
-// Batch Add Candidates: Create multiple candidates with detailed payload and resume uploads
-export const addCandidates = async (candidates) => {
+// Optional: Delete Candidate
+export const deleteCandidate = async (candidateId) => {
   try {
-    // Create FormData for multiple candidates
-    const formData = new FormData();
-
-    candidates.forEach((candidate, index) => {
-      Object.keys(candidate).forEach((key) => {
-        if (key === 'resumeFile') {
-          formData.append(`candidates[${index}].resume`, candidate.resumeFile);
-        } else if (Array.isArray(candidate[key])) {
-          candidate[key].forEach((item) => formData.append(`candidates[${index}].${key}[]`, item));
-        } else {
-          formData.append(`candidates[${index}].${key}`, candidate[key]);
-        }
-      });
-    });
-
-    const response = await axiosInstance.post('/batch-add', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
-
-    return response.data; // Assuming this returns an array of created candidate objects
+    const response = await axiosInstance.delete(`/${candidateId}`);
+    return response.data;
   } catch (error) {
-    console.error('Error adding candidates:', error);
-    throw error.response?.data || 'Error adding candidates.';
+    console.error('Error deleting candidate:', error);
+    throw error.response?.data || 'Error deleting candidate';
   }
 };
