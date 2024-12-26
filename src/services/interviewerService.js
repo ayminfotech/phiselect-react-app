@@ -30,5 +30,16 @@ export const getInterviewerById = async (interviewerId) => {
     throw error.response?.data || 'Error fetching interviewer by ID';
   }
 };
+// Fetch assigned candidates for the interviewer
+export const fetchAssignedCandidates = async () => {
+  const response = await axios.get(`${API_BASE_URL}/assigned-candidates`);
+  return response.data; // Adjust based on API response format
+};
+
+// Submit feedback for a candidate
+export const submitCandidateFeedback = async (feedbackData) => {
+  const response = await axios.post(`${API_BASE_URL}/feedback`, feedbackData);
+  return response.data; // Adjust based on API response format
+};
 
 // Additional interviewer service functions as needed

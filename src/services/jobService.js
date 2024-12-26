@@ -9,7 +9,6 @@ const axiosInstance = axios.create({
   baseURL: API_BASE_URL,
 });
 
-// Request interceptor to attach tokens and log requests
 axiosInstance.interceptors.request.use(
   (config) => {
     const authData = localStorage.getItem('auth');
@@ -22,10 +21,10 @@ axiosInstance.interceptors.request.use(
         const tenantId = decodedToken.tenantId || 'No Tenant ID Found';
         const userRefId = decodedToken.userRefID || 'No User Ref ID Found';
 
-        // Adding headers
+        // Adding headers with correct names
         config.headers.Authorization = `Bearer ${auth.token}`;
-        config.headers['Tenant-ID'] = tenantId;
-        config.headers['User-Ref-ID'] = userRefId;
+        config.headers['X-Tenant-ID'] = tenantId;
+        config.headers['X-User-Ref'] = userRefId;
 
         // Logging details
         console.log('==== Preparing API Request ====');
@@ -218,5 +217,22 @@ export const getAssignedJobsByRecruiter = async () => {
   } catch (error) {
     console.error('Error fetching assigned jobs:', error);
     throw error.response?.data || 'Error fetching assigned jobs';
+  }
+};
+/**
+ * Fetch positions for a specific job
+ * @param {String} jobId - Job ID (UUID) for which positions are fetched
+ * @returns {Array} - Array of Position objects
+ */
+export const getPositionsByJobId = async (jobId) => {
+  try {
+    console.log(`Fetching positions for job with ID: ${jobId}`);
+    // Notice we are calling /jobs/<jobId>/positions
+    const response = await axiosInstance.get(`/jobs/${jobId}/positions`);
+    console.log('Positions fetched successfully:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error(`Error fetching positions for job ID ${jobId}:`, error.response || error);
+    throw error.response?.data || 'Error fetching positions';
   }
 };

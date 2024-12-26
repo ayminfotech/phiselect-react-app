@@ -15,21 +15,29 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  Grid,
+  Tooltip,
 } from '@mui/material';
-import { ExpandMore, ExpandLess, Delete } from '@mui/icons-material';
+import {
+  ExpandMore,
+  ExpandLess,
+  Delete,
+  AddCircleOutline,
+  Visibility,
+  Schedule,
+} from '@mui/icons-material';
 import AddCandidate from './AddCandidate';
-import ScheduleInterviewModal from './ScheduleInterviewModal';  // Import the new modal
-import PropTypes from 'prop-types';
-import commonStyles from '../styles/commonStyles';
+import ScheduleInterviewModal from './ScheduleInterviewModal';
+import commonStyles from '../../styles/commonStyles';
 
-const PositionCard = ({ jobId, position, jobTitle }) => {
+const PositionCard = ({ jobId, position, totalPositions }) => {
   const [openCandidates, setOpenCandidates] = useState(false);
   const [candidates, setCandidates] = useState([]);
   const [loading, setLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
   const [openAddCandidate, setOpenAddCandidate] = useState(false);
   const [openViewCandidates, setOpenViewCandidates] = useState(false);
-  const [openScheduleInterview, setOpenScheduleInterview] = useState(false);  // Manage interview modal
+  const [openScheduleInterview, setOpenScheduleInterview] = useState(false);
 
   const handleToggleCandidates = () => setOpenCandidates(!openCandidates);
 
@@ -57,8 +65,10 @@ const PositionCard = ({ jobId, position, jobTitle }) => {
   return (
     <Box sx={{ ...commonStyles.card, p: 2, mb: 2 }}>
       {/* Position Header */}
-      <Box display="flex" justifyContent="space-between" alignItems="center">
-        <Typography sx={commonStyles.header}>{position.positionCode}</Typography>
+      <Box display="flex" justifyContent="space-between" alignItems="center" sx={{ width: '100%' }}>
+        <Typography sx={{ ...commonStyles.header }}>
+          {position.positionCode}
+        </Typography>
         <IconButton onClick={handleToggleCandidates}>
           {openCandidates ? <ExpandLess /> : <ExpandMore />}
         </IconButton>
@@ -66,6 +76,12 @@ const PositionCard = ({ jobId, position, jobTitle }) => {
       <Typography sx={commonStyles.subtitle} mb={1}>
         Status: {position.status}
       </Typography>
+      
+      {/* Display Total Positions */}
+      <Typography sx={{ fontSize: '14px', color: '#8e8e8e' }}>
+        Total Positions: {totalPositions}
+      </Typography>
+      
       <Divider />
 
       {/* Success Message */}
@@ -75,46 +91,53 @@ const PositionCard = ({ jobId, position, jobTitle }) => {
         </Alert>
       )}
 
-      {/* Add Candidates Button */}
-      <Box mt={2}>
-        <Button
-          variant="contained"
-          color="primary"
-          fullWidth
-          onClick={() => setOpenAddCandidate(true)}
-          sx={commonStyles.button}
-        >
-          Add Candidates
-        </Button>
-      </Box>
+      {/* Button Group for Add, View, Schedule */}
+      <Grid container spacing={2} sx={{ mt: 2, textAlign: 'center' }}>
+        <Grid item xs={12} sm={4}>
+          <Tooltip title="Add Candidates">
+            <Button
+              variant="contained"
+              color="primary"
+              fullWidth
+              onClick={() => setOpenAddCandidate(true)}
+              startIcon={<AddCircleOutline />}
+              sx={{ textTransform: 'none' }}
+            >
+              Add
+            </Button>
+          </Tooltip>
+        </Grid>
+        <Grid item xs={12} sm={4}>
+          <Tooltip title="View Candidates">
+            <Button
+              variant="contained"
+              color="secondary"
+              fullWidth
+              onClick={() => setOpenViewCandidates(true)}
+              startIcon={<Visibility />}
+              sx={{ textTransform: 'none' }}
+            >
+              View
+            </Button>
+          </Tooltip>
+        </Grid>
+        <Grid item xs={12} sm={4}>
+          <Tooltip title="Schedule Interview">
+            <Button
+              variant="contained"
+              color="success"
+              fullWidth
+              onClick={() => setOpenScheduleInterview(true)}
+              startIcon={<Schedule />}
+              sx={{ textTransform: 'none' }}
+            >
+              Schedule
+            </Button>
+          </Tooltip>
+        </Grid>
+      </Grid>
 
-      {/* View Candidates Button */}
-      <Box mt={2}>
-        <Button
-          variant="contained"
-          color="secondary"
-          fullWidth
-          onClick={() => setOpenViewCandidates(true)}
-          sx={commonStyles.button}
-        >
-          View Candidates
-        </Button>
-      </Box>
-
-      {/* Schedule Interview Button */}
-      <Box mt={2}>
-        <Button
-          variant="contained"
-          color="success"
-          fullWidth
-          onClick={() => setOpenScheduleInterview(true)}  // Open schedule interview modal
-          sx={commonStyles.button}
-        >
-          Schedule Interview
-        </Button>
-      </Box>
-
-      {/* Candidates Section */}
+      {/* Candidates Section (Collapse) */}
       <Collapse in={openCandidates} timeout="auto" unmountOnExit>
         <Box mt={2}>
           <Typography sx={commonStyles.sectionTitle}>Sourced Candidates</Typography>
@@ -125,7 +148,7 @@ const PositionCard = ({ jobId, position, jobTitle }) => {
               {candidates.map((candidate) => (
                 <ListItem key={candidate.id} divider>
                   <ListItemText
-                    primary={candidate.name}
+                    primary={candidate.firstName || candidate.name}
                     secondary={`Email: ${candidate.email}`}
                   />
                   <IconButton edge="end" color="error" onClick={() => handleDeleteCandidate(candidate.id)}>
@@ -150,7 +173,7 @@ const PositionCard = ({ jobId, position, jobTitle }) => {
 
       {/* View Candidates Modal */}
       <Dialog open={openViewCandidates} onClose={handleViewCandidatesClose}>
-        <DialogTitle>View Candidates for Position</DialogTitle>
+        <DialogTitle>View Candidates</DialogTitle>
         <DialogContent>
           {candidates.length > 0 ? (
             <List>
@@ -168,9 +191,7 @@ const PositionCard = ({ jobId, position, jobTitle }) => {
           )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleViewCandidatesClose} color="primary">
-            Close
-          </Button>
+          <Button onClick={handleViewCandidatesClose}>Close</Button>
         </DialogActions>
       </Dialog>
 
@@ -178,21 +199,11 @@ const PositionCard = ({ jobId, position, jobTitle }) => {
       <ScheduleInterviewModal
         open={openScheduleInterview}
         onClose={handleScheduleInterviewClose}
-        candidateId={candidates[0]?.id} // assuming we can get the first candidate for now
+        candidateId={candidates[0]?.id} // In real app you’d select which candidate
         positionId={position.positionId}
       />
     </Box>
   );
-};
-
-PositionCard.propTypes = {
-  jobId: PropTypes.string.isRequired,
-  position: PropTypes.shape({
-    positionId: PropTypes.string.isRequired,
-    positionCode: PropTypes.string.isRequired,
-    status: PropTypes.string.isRequired,
-  }).isRequired,
-  jobTitle: PropTypes.string,
 };
 
 export default PositionCard;

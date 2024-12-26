@@ -53,7 +53,6 @@ import StatCard from '../../roles/StatCard';
 import RoleBasedPanel from '../../roles/RoleBasedPanel';
 import Notifications from '../../roles/Notifications';
 import UpcomingEvents from '../../roles/UpcomingEvents';
-import PerformanceMetrics from '../../roles/PerformanceMetrics';
 import ActivityLogs from '../../roles/ActivityLogs';
 import AdminPanel from '../../roles/AdminPanel';
 
@@ -76,6 +75,7 @@ const TenantDashboard = () => {
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
 
+  // Fetch Tenant Data
   useEffect(() => {
     const fetchTenantData = async () => {
       setLoading(true);
@@ -118,11 +118,10 @@ const TenantDashboard = () => {
   };
 
   const handleLogout = () => {
-    // Assuming your AuthContext provides a logout method that handles clearing auth state and redirecting.
     logout();
   };
 
-  // Dummy data for charts
+  // Example chart data
   const applicationTrends = [
     { week: 'Week 1', applications: 20 },
     { week: 'Week 2', applications: 32 },
@@ -137,50 +136,89 @@ const TenantDashboard = () => {
     { name: 'Hired', value: 15 },
     { name: 'Rejected', value: 10 },
   ];
-
   const COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#d0ed57', '#a4de6c'];
 
-  // Dummy admin stats
+  // Dummy admin stats (example)
   const adminStats = {
     reportsGenerated: 15,
     activeOrganizations: 3,
   };
 
-  const manageTenantSettings = () => console.log('Manage Tenant Settings');
-  const generateReports = () => console.log('Generate Reports');
-
+  // Sidebar Content
   const drawer = (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', background: 'linear-gradient(to bottom right, #4A90E2, #7B61FF)' }}>
-      <Toolbar sx={{ justifyContent: 'center', py: 2 }}>
-        <Typography variant="h6" noWrap sx={{ fontWeight: 'bold', color: '#fff' }}>
+    <Box
+      sx={{
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        // Soft pastel gradient
+        background: 'linear-gradient(to bottom right, #bfe9ff, #e0c8f2)',
+      }}
+    >
+      <Toolbar
+        sx={{
+          justifyContent: 'center',
+          py: 2,
+          borderBottom: '1px solid rgba(255,255,255,0.2)',
+          backgroundColor: 'transparent',
+        }}
+      >
+        <Typography variant="h6" noWrap sx={{ fontWeight: 'bold', color: '#4a4a4a' }}>
           {name || 'Tenant Dashboard'}
         </Typography>
       </Toolbar>
       <Divider sx={{ borderColor: 'rgba(255,255,255,0.2)' }} />
-      <List sx={{ color: '#fff' }}>
-        <ListItem button sx={{ '&:hover': { backgroundColor: 'rgba(255,255,255,0.1)' } }}>
+
+      <List sx={{ color: '#4a4a4a', flexGrow: 1 }}>
+        <ListItem
+          button
+          sx={{
+            '&:hover': { backgroundColor: 'rgba(255,255,255,0.3)' },
+          }}
+        >
           <DashboardIcon sx={{ mr: 1 }} />
           <ListItemText primary="Dashboard Overview" />
         </ListItem>
-        <ListItem button sx={{ '&:hover': { backgroundColor: 'rgba(255,255,255,0.1)' } }}>
+        <ListItem
+          button
+          sx={{
+            '&:hover': { backgroundColor: 'rgba(255,255,255,0.3)' },
+          }}
+        >
           <NotificationsIcon sx={{ mr: 1 }} />
           <ListItemText primary="Notifications" />
         </ListItem>
-        <ListItem button sx={{ '&:hover': { backgroundColor: 'rgba(255,255,255,0.1)' } }}>
+        <ListItem
+          button
+          sx={{
+            '&:hover': { backgroundColor: 'rgba(255,255,255,0.3)' },
+          }}
+        >
           <EventIcon sx={{ mr: 1 }} />
           <ListItemText primary="Events" />
         </ListItem>
-        <ListItem button sx={{ '&:hover': { backgroundColor: 'rgba(255,255,255,0.1)' } }}>
+        <ListItem
+          button
+          sx={{
+            '&:hover': { backgroundColor: 'rgba(255,255,255,0.3)' },
+          }}
+        >
           <PeopleIcon sx={{ mr: 1 }} />
           <ListItemText primary="Users" />
         </ListItem>
       </List>
-      <Box sx={{ flexGrow: 1 }} />
-      <Box sx={{ p: 2, textAlign: 'center', color: '#fff' }}>
+
+      <Box sx={{ p: 2, textAlign: 'center', color: '#4a4a4a' }}>
         <Typography variant="caption" sx={{ display: 'block', mb: 1 }}>
           Tenant: {tenantId || 'N/A'}
         </Typography>
-        <Button variant="outlined" color="inherit" startIcon={<LogoutIcon />} onClick={handleLogout} sx={{ borderColor: '#fff', color: '#fff' }}>
+        <Button
+          variant="outlined"
+          color="inherit"
+          startIcon={<LogoutIcon />}
+          onClick={handleLogout}
+          sx={{ borderColor: '#4a4a4a', color: '#4a4a4a' }}
+        >
           Logout
         </Button>
       </Box>
@@ -188,15 +226,19 @@ const TenantDashboard = () => {
   );
 
   return (
-    <Box sx={{ display: 'flex' }}>
+    <Box sx={{ display: 'flex', backgroundColor: theme.palette.background.default }}>
       <CssBaseline />
-      {/* AppBar */}
+
+      {/* TOP APP BAR */}
       <AppBar
         position="fixed"
         sx={{
           width: { sm: `calc(100% - ${drawerWidth}px)` },
           ml: { sm: `${drawerWidth}px` },
-          backgroundColor: theme.palette.primary.main,
+          backgroundColor: '#ffffffcc',
+          backdropFilter: 'blur(6px)',
+          color: theme.palette.text.primary,
+          boxShadow: '0 2px 10px rgba(0,0,0,0.05)',
         }}
       >
         <Toolbar>
@@ -215,25 +257,28 @@ const TenantDashboard = () => {
             <Typography variant="h6" noWrap sx={{ fontWeight: 'bold' }}>
               Welcome, {user?.name || 'Admin'}
             </Typography>
-            <Typography variant="subtitle2" color="inherit">
+            <Typography variant="subtitle2" sx={{ color: 'text.secondary' }}>
               Tenant: {tenantId || 'N/A'}
             </Typography>
           </Box>
           <Tooltip title="Logout">
             <IconButton color="inherit" onClick={handleLogout}>
-              <LogoutIcon />
+              <LogoutIcon sx={{ color: 'text.secondary' }} />
             </IconButton>
           </Tooltip>
         </Toolbar>
       </AppBar>
 
-      {/* Sidebar */}
+      {/* SIDEBAR */}
       <Box
         component="nav"
-        sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }}
+        sx={{
+          width: { sm: drawerWidth },
+          flexShrink: { sm: 0 },
+        }}
         aria-label="sidebar navigation"
       >
-        {/* Mobile Drawer */}
+        {/* MOBILE Drawer */}
         <Drawer
           variant="temporary"
           open={mobileOpen}
@@ -241,27 +286,36 @@ const TenantDashboard = () => {
           ModalProps={{ keepMounted: true }}
           sx={{
             display: { xs: 'block', sm: 'none' },
-            '& .MuiDrawer-paper': { width: drawerWidth, boxSizing: 'border-box' }
+            '& .MuiDrawer-paper': { width: drawerWidth, boxSizing: 'border-box' },
           }}
         >
           {drawer}
         </Drawer>
 
-        {/* Desktop Drawer */}
+        {/* DESKTOP Drawer */}
         <Drawer
           variant="permanent"
+          open
           sx={{
             display: { xs: 'none', sm: 'block' },
-            '& .MuiDrawer-paper': { width: drawerWidth, boxSizing: 'border-box' }
+            '& .MuiDrawer-paper': { width: drawerWidth, boxSizing: 'border-box' },
           }}
-          open
         >
           {drawer}
         </Drawer>
       </Box>
 
-      {/* Main Content */}
-      <Box component="main" sx={{ flexGrow: 1, py: { xs: 2, sm: 3 }, px: { xs: 2, sm: 3 }, width: '100%', backgroundColor: 'background.default' }}>
+      {/* MAIN CONTENT */}
+      <Box
+        component="main"
+        sx={{
+          flexGrow: 1,
+          py: { xs: 2, sm: 3 },
+          px: { xs: 2, sm: 3 },
+          width: '100%',
+          minHeight: '100vh',
+        }}
+      >
         <Toolbar />
 
         {/* Admin Stats (If ADMIN) */}
@@ -400,7 +454,13 @@ const TenantDashboard = () => {
             <Divider sx={{ mb: 2 }} />
             <Grid container spacing={4}>
               <Grid item xs={12} md={6}>
-                <Paper elevation={3} sx={{ p: 3 }}>
+                <Paper
+                  elevation={3}
+                  sx={{
+                    p: 3,
+                    background: 'linear-gradient(to right, #fdfcfb, #e2d1c3)',
+                  }}
+                >
                   <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 'bold' }}>
                     Weekly Applications
                   </Typography>
@@ -422,7 +482,13 @@ const TenantDashboard = () => {
                 </Paper>
               </Grid>
               <Grid item xs={12} md={6}>
-                <Paper elevation={3} sx={{ p: 3 }}>
+                <Paper
+                  elevation={3}
+                  sx={{
+                    p: 3,
+                    background: 'linear-gradient(to right, #fdfcfb, #e2d1c3)',
+                  }}
+                >
                   <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 'bold' }}>
                     Candidate Distribution
                   </Typography>
@@ -455,10 +521,7 @@ const TenantDashboard = () => {
         {/* Admin Panel (If ADMIN) */}
         {roles.includes('ADMIN') && (
           <Box sx={{ mb: 4 }}>
-            <AdminPanel
-              manageTenantSettings={manageTenantSettings}
-              generateReports={generateReports}
-            />
+            <AdminPanel />
           </Box>
         )}
 
@@ -477,11 +540,6 @@ const TenantDashboard = () => {
               <UpcomingEvents events={tenantData?.upcomingEvents || []} />
             </Grid>
           </Grid>
-        </Box>
-
-        {/* Performance Metrics */}
-        <Box sx={{ mb: 4 }}>
-          <PerformanceMetrics metrics={tenantData?.analyticsData || {}} />
         </Box>
 
         {/* Tenant Information (If ADMIN) */}
@@ -509,7 +567,12 @@ const TenantDashboard = () => {
                   <Typography>
                     <strong>Website:</strong>{' '}
                     {tenantData?.website ? (
-                      <a href={tenantData.website} target="_blank" rel="noopener noreferrer" style={{ color: theme.palette.primary.main }}>
+                      <a
+                        href={tenantData.website}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ color: theme.palette.primary.main }}
+                      >
                         {tenantData.website}
                       </a>
                     ) : 'N/A'}

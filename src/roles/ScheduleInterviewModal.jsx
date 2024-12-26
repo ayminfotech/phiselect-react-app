@@ -1,117 +1,186 @@
-import React, { useState } from 'react';
+// src/components/ScheduleInterviewModal.js
+import React, { useState, useEffect } from 'react';
 import {
+  Modal,
   Box,
   Typography,
-  Button,
   TextField,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
+  Button,
   CircularProgress,
   Alert,
+  MenuItem,
+  Select,
+  InputLabel,
+  FormControl,
 } from '@mui/material';
-import PropTypes from 'prop-types';
-import { assignInterview } from '../services/candidateService'; // Make sure assignInterview is correctly imported
+import { assignInterview } from '../services/candidateService';
+import { getUsersByTenantIdAndRoles } from '../services/UserService';
+import { useSnackbar } from 'notistack';
+import { LocalizationProvider, DateTimePicker } from '@mui/x-date-pickers';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 
-const ScheduleInterviewModal = ({ open, onClose, candidateId, positionId }) => {
-  const [interviewDate, setInterviewDate] = useState('');
-  const [interviewRound, setInterviewRound] = useState('');
+const ScheduleInterviewModal = ({ open, onClose, candidate, onInterviewScheduled }) => {
+  const { enqueueSnackbar } = useSnackbar();
+  const [interviewDateTime, setInterviewDateTime] = useState(null); // Initialize with null
+  const [interviewRound, setInterviewRound] = useState('ROUND_1'); // Default round
   const [interviewerRefId, setInterviewerRefId] = useState('');
+  const [interviewers, setInterviewers] = useState([]);
+  const [loadingInterviewers, setLoadingInterviewers] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [successMessage, setSuccessMessage] = useState('');
-  const [errorMessage, setErrorMessage] = useState('');
+  const [error, setError] = useState(null);
 
-  // Handle Interview Schedule Submission
-  const handleSubmit = async () => {
+  // Fetch interviewers when modal opens
+  useEffect(() => {
+    if (open) {
+      setInterviewDateTime(null);
+      setInterviewRound('ROUND_1');
+      setInterviewerRefId('');
+      setError(null);
+      fetchInterviewers();
+    }
+  }, [open]);
+
+  const fetchInterviewers = async () => {
+    setLoadingInterviewers(true);
     try {
-      setLoading(true);
-      const interviewData = {
-        candidateId,
-        positionId,
-        scheduledDateTime: interviewDate,
-        roundNumber: interviewRound,
-        interviewerRefId, // Assuming interviewer is available
-      };
-      const result = await assignInterview(candidateId, interviewData);
-      setSuccessMessage('Interview scheduled successfully!');
-      setErrorMessage('');
-      onClose(result); // Close modal on success
+      const fetchedInterviewers = await getUsersByTenantIdAndRoles(['INTERVIEWER']);
+      setInterviewers(fetchedInterviewers);
     } catch (error) {
-      setErrorMessage('Error scheduling interview. Please try again.');
-      setSuccessMessage('');
+      enqueueSnackbar('Failed to load interviewers.', { variant: 'error' });
+      console.error(error);
+      setError('Failed to load interviewers.');
+    } finally {
+      setLoadingInterviewers(false);
+    }
+  };
+
+  const handleSubmit = async () => {
+    // Client-side validation
+    if (!interviewDateTime || !interviewerRefId) {
+      setError('Please select an interview date and an interviewer.');
+      return;
+    }
+
+    // Check if the selected datetime is in the future
+    const now = new Date();
+    if (interviewDateTime <= now) {
+      setError('Scheduled date and time must be in the future.');
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const interviewData = {
+        candidateId: candidate.id, // UUID
+        positionId: candidate.appliedPositionIds[0], // Assuming the first position
+        interviewerRefId, // UUID as string
+        scheduledDateTime: interviewDateTime.toISOString(), // ISO string with timezone
+        roundNumber: interviewRound,
+      };
+      const scheduledInterview = await assignInterview(candidate.id, interviewData);
+      enqueueSnackbar('Interview scheduled successfully!', { variant: 'success' });
+      onInterviewScheduled(scheduledInterview);
+      onClose();
+    } catch (err) {
+      console.error('Error scheduling interview:', err);
+      setError(err.message || 'Failed to schedule interview.');
+      enqueueSnackbar('Failed to schedule interview.', { variant: 'error' });
     } finally {
       setLoading(false);
     }
   };
 
+  if (!candidate) {
+    return null;
+  }
+
   return (
-    <Dialog open={open} onClose={onClose}>
-      <DialogTitle>Schedule Interview for Candidate</DialogTitle>
-      <DialogContent>
-        {successMessage && <Alert severity="success">{successMessage}</Alert>}
-        {errorMessage && <Alert severity="error">{errorMessage}</Alert>}
-        
-        {/* Interview Date */}
-        <TextField
-          label="Interview Date & Time"
-          type="datetime-local"
-          fullWidth
-          variant="outlined"
-          margin="normal"
-          value={interviewDate}
-          onChange={(e) => setInterviewDate(e.target.value)}
-          required
-          InputLabelProps={{
-            shrink: true,
-          }}
-        />
+    <Modal open={open} onClose={onClose}>
+      <Box
+        sx={{
+          p: 4,
+          backgroundColor: 'white',
+          margin: 'auto',
+          maxWidth: 500,
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          borderRadius: 2,
+          boxShadow: 24,
+        }}
+      >
+        <Typography variant="h6" sx={{ mb: 2 }}>
+          Schedule Interview for {candidate.firstName} {candidate.lastName}
+        </Typography>
 
-        {/* Interview Round */}
-        <TextField
-          label="Interview Round"
-          fullWidth
-          variant="outlined"
-          margin="normal"
-          value={interviewRound}
-          onChange={(e) => setInterviewRound(e.target.value)}
-          required
-        />
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
 
-        {/* Interviewer ID */}
-        <TextField
-          label="Interviewer ID"
-          fullWidth
-          variant="outlined"
-          margin="normal"
-          value={interviewerRefId}
-          onChange={(e) => setInterviewerRefId(e.target.value)}
-          required
-        />
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose} color="secondary">
-          Cancel
-        </Button>
-        <Button
-          onClick={handleSubmit}
-          color="primary"
-          variant="contained"
-          startIcon={loading && <CircularProgress size={20} />}
-          disabled={loading}
-        >
-          {loading ? 'Scheduling...' : 'Schedule Interview'}
-        </Button>
-      </DialogActions>
-    </Dialog>
+        <LocalizationProvider dateAdapter={AdapterDateFns}>
+          <DateTimePicker
+            label="Interview Date & Time"
+            value={interviewDateTime}
+            onChange={(newValue) => setInterviewDateTime(newValue)}
+            renderInput={(params) => <TextField {...params} fullWidth sx={{ mb: 2 }} />}
+            disablePast // Disables selection of past dates
+          />
+        </LocalizationProvider>
+
+        <FormControl fullWidth sx={{ mb: 2 }}>
+          <InputLabel id="interviewer-label">Interviewer</InputLabel>
+          <Select
+            labelId="interviewer-label"
+            label="Interviewer"
+            value={interviewerRefId}
+            onChange={(e) => setInterviewerRefId(e.target.value)}
+            disabled={loadingInterviewers}
+          >
+            {loadingInterviewers ? (
+              <MenuItem value="">
+                <em>Loading...</em>
+              </MenuItem>
+            ) : (
+              interviewers.map((interviewer) => (
+                <MenuItem key={interviewer.userId} value={interviewer.userId}>
+                  {interviewer.firstName} {interviewer.lastName} ({interviewer.email})
+                </MenuItem>
+              ))
+            )}
+          </Select>
+        </FormControl>
+
+        <FormControl fullWidth sx={{ mb: 2 }}>
+          <InputLabel id="round-label">Interview Round</InputLabel>
+          <Select
+            labelId="round-label"
+            label="Interview Round"
+            value={interviewRound}
+            onChange={(e) => setInterviewRound(e.target.value)}
+          >
+            <MenuItem value="ROUND_1">Round 1</MenuItem>
+            <MenuItem value="ROUND_2">Round 2</MenuItem>
+            <MenuItem value="ROUND_3">Round 3</MenuItem>
+            {/* Add more rounds as needed */}
+          </Select>
+        </FormControl>
+
+        <Box display="flex" justifyContent="flex-end">
+          <Button onClick={onClose} sx={{ mr: 2 }}>
+            Cancel
+          </Button>
+          <Button variant="contained" onClick={handleSubmit} disabled={loading}>
+            {loading ? <CircularProgress size={24} /> : 'Schedule'}
+          </Button>
+        </Box>
+      </Box>
+    </Modal>
   );
-};
-
-ScheduleInterviewModal.propTypes = {
-  open: PropTypes.bool.isRequired,
-  onClose: PropTypes.func.isRequired,
-  candidateId: PropTypes.string.isRequired,
-  positionId: PropTypes.string.isRequired,
 };
 
 export default ScheduleInterviewModal;

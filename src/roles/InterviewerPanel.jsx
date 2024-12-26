@@ -1,42 +1,228 @@
-// src/components/roles/InterviewerPanel.jsx
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Typography,
-  Button,
-  Grid,
   Paper,
-  TextField,
   Divider,
-  Rating,
+  TextField,
+  MenuItem,
+  Button,
+  IconButton,
   Tooltip,
+  Grid,
+  Avatar,
+  InputAdornment,
+  CircularProgress,
 } from '@mui/material';
-import PropTypes from 'prop-types';
+import SearchIcon from '@mui/icons-material/Search';
 import PersonIcon from '@mui/icons-material/Person';
-import StarIcon from '@mui/icons-material/Star';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import Pagination from '@mui/material/Pagination';
+import Rating from '@mui/material/Rating';
 
-const InterviewerPanel = ({ feedback, submitFeedback }) => {
-  const [feedbackInputs, setFeedbackInputs] = React.useState({});
-  const [ratings, setRatings] = React.useState({});
+const dummyCandidates = Array.from({ length: 100 }, (_, index) => ({
+  id: `${index + 1}`,
+  name: `Candidate ${index + 1}`,
+  email: `candidate${index + 1}@example.com`,
+  interviewDate: `2024-12-${Math.floor(Math.random() * 30) + 1}`,
+  round: '',
+  feedback: '',
+  notes: '',
+  skills: [
+    { name: 'JavaScript', rating: Math.floor(Math.random() * 5) + 1 },
+    { name: 'React', rating: Math.floor(Math.random() * 5) + 1 },
+    { name: 'Problem Solving', rating: Math.floor(Math.random() * 5) + 1 },
+  ],
+}));
 
-  const handleFeedbackChange = (id, value) => {
-    setFeedbackInputs((prev) => ({ ...prev, [id]: value }));
+const PAGE_SIZE = 10;
+
+const InterviewerPanel = () => {
+  const [candidates, setCandidates] = useState(dummyCandidates);
+  const [filteredCandidates, setFilteredCandidates] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [view, setView] = useState('list'); // 'list' or 'details'
+  const [selectedCandidate, setSelectedCandidate] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  useEffect(() => {
+    filterCandidates();
+  }, [searchQuery, candidates]);
+
+  const filterCandidates = () => {
+    const filtered = candidates.filter(
+      (candidate) =>
+        candidate.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        candidate.email.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+    setFilteredCandidates(filtered);
   };
 
-  const handleRatingChange = (id, value) => {
-    setRatings((prev) => ({ ...prev, [id]: value }));
+  const handleSearchChange = (e) => {
+    setSearchQuery(e.target.value);
   };
 
-  const handleSubmit = (id) => {
-    const currentFeedback = (feedbackInputs[id] || '').trim();
-    const currentRating = ratings[id] || 0;
-    if (currentFeedback !== '' || currentRating > 0) {
-      const fullFeedback = `Rating: ${currentRating} star(s) - ${currentFeedback}`;
-      submitFeedback(id, fullFeedback);
-      setFeedbackInputs((prev) => ({ ...prev, [id]: '' }));
-      setRatings((prev) => ({ ...prev, [id]: 0 }));
-    }
+  const handlePageChange = (event, value) => {
+    setCurrentPage(value);
   };
+
+  const handleViewCandidate = (candidate) => {
+    setSelectedCandidate(candidate);
+    setView('details');
+  };
+
+  const handleBackToList = () => {
+    setView('list');
+    setSelectedCandidate(null);
+  };
+
+  const renderCandidateList = () => {
+    const startIndex = (currentPage - 1) * PAGE_SIZE;
+    const paginatedCandidates = filteredCandidates.slice(
+      startIndex,
+      startIndex + PAGE_SIZE
+    );
+
+    return (
+      <Box>
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            mb: 2,
+          }}
+        >
+          <TextField
+            placeholder="Search by name or email"
+            variant="outlined"
+            size="small"
+            value={searchQuery}
+            onChange={handleSearchChange}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon />
+                </InputAdornment>
+              ),
+            }}
+          />
+          <Typography variant="body2">
+            Showing {filteredCandidates.length} candidates
+          </Typography>
+        </Box>
+
+        <Grid container spacing={3}>
+          {paginatedCandidates.map((candidate) => (
+            <Grid item xs={12} sm={6} md={4} key={candidate.id}>
+              <Paper
+                sx={{
+                  p: 2,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  transition: 'all 0.3s ease',
+                  '&:hover': { boxShadow: 4, backgroundColor: '#fafafa' },
+                }}
+              >
+                <Avatar sx={{ mb: 2 }}>
+                  <PersonIcon />
+                </Avatar>
+                <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
+                  {candidate.name}
+                </Typography>
+                <Typography variant="body2" color="textSecondary">
+                  {candidate.email}
+                </Typography>
+                <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
+                  Interview Date: {candidate.interviewDate}
+                </Typography>
+                <Button
+                  variant="contained"
+                  size="small"
+                  onClick={() => handleViewCandidate(candidate)}
+                  sx={{ textTransform: 'none' }}
+                >
+                  View Details
+                </Button>
+              </Paper>
+            </Grid>
+          ))}
+        </Grid>
+
+        <Box display="flex" justifyContent="center" mt={3}>
+          <Pagination
+            count={Math.ceil(filteredCandidates.length / PAGE_SIZE)}
+            page={currentPage}
+            onChange={handlePageChange}
+          />
+        </Box>
+      </Box>
+    );
+  };
+
+  const renderCandidateDetails = () => (
+    <Box>
+      <Box display="flex" alignItems="center" mb={2}>
+        <IconButton onClick={handleBackToList}>
+          <ArrowBackIcon />
+        </IconButton>
+        <Typography variant="h5" sx={{ fontWeight: 'bold', ml: 1 }}>
+          {selectedCandidate.name}
+        </Typography>
+      </Box>
+      <Divider sx={{ mb: 3 }} />
+      <Typography variant="body1" sx={{ mb: 2 }}>
+        <strong>Email:</strong> {selectedCandidate.email}
+      </Typography>
+      <Typography variant="body1" sx={{ mb: 3 }}>
+        <strong>Interview Date:</strong> {selectedCandidate.interviewDate}
+      </Typography>
+      <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 2 }}>
+        Skill Set
+      </Typography>
+      {selectedCandidate.skills.map((skill) => (
+        <Box
+          key={skill.name}
+          display="flex"
+          alignItems="center"
+          sx={{ mb: 1 }}
+        >
+          <Typography sx={{ flex: 1 }}>{skill.name}</Typography>
+          <Rating value={skill.rating} readOnly precision={0.5} />
+        </Box>
+      ))}
+      <Divider sx={{ my: 3 }} />
+      <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 2 }}>
+        Feedback
+      </Typography>
+      <TextField
+        label="Your Feedback"
+        variant="outlined"
+        fullWidth
+        multiline
+        rows={3}
+        placeholder="Enter your feedback here..."
+        sx={{ mb: 2 }}
+      />
+      <TextField
+        label="Additional Notes (Optional)"
+        variant="outlined"
+        fullWidth
+        multiline
+        rows={3}
+        placeholder="Enter any additional notes here..."
+        sx={{ mb: 3 }}
+      />
+      <Button
+        variant="contained"
+        color="primary"
+        sx={{ textTransform: 'none', fontWeight: 'bold' }}
+      >
+        Submit Feedback
+      </Button>
+    </Box>
+  );
 
   return (
     <Paper
@@ -51,120 +237,12 @@ const InterviewerPanel = ({ feedback, submitFeedback }) => {
         Interviewer Panel
       </Typography>
       <Typography variant="subtitle2" color="textSecondary" gutterBottom>
-        Provide detailed feedback and a rating for each candidate’s interview performance.
+        Manage your assigned candidates efficiently.
       </Typography>
       <Divider sx={{ mb: 3 }} />
-
-      <Grid container spacing={3}>
-        {(feedback || []).map((fb) => (
-          <Grid item xs={12} sm={6} md={4} key={fb.id}>
-            <Paper
-              sx={{
-                p: 2,
-                border: '1px solid #eee',
-                borderRadius: 2,
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'space-between',
-                height: '100%',
-                transition: 'all 0.3s ease',
-                '&:hover': {
-                  boxShadow: 4,
-                  backgroundColor: '#fafafa',
-                },
-              }}
-              elevation={1}
-            >
-              <Box sx={{ mb: 2 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                  <PersonIcon color="primary" sx={{ mr: 1 }} />
-                  <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                    {fb.candidate}
-                  </Typography>
-                </Box>
-                <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
-                  Interview Date: {fb.interviewDate}
-                </Typography>
-
-                <Tooltip title="Rate the candidate’s performance. 1 star = poor, 5 stars = excellent.">
-                  <Rating
-                    name={`rating-${fb.id}`}
-                    value={ratings[fb.id] || 0}
-                    onChange={(event, newValue) => handleRatingChange(fb.id, newValue)}
-                    precision={1}
-                    icon={<StarIcon fontSize="inherit" />}
-                    emptyIcon={<StarIcon fontSize="inherit" style={{ opacity: 0.3 }} />}
-                    sx={{ mb: 2 }}
-                  />
-                </Tooltip>
-
-                <TextField
-                  label="Your Feedback"
-                  variant="outlined"
-                  fullWidth
-                  multiline
-                  rows={3}
-                  value={feedbackInputs[fb.id] || ''}
-                  onChange={(e) => handleFeedbackChange(fb.id, e.target.value)}
-                  placeholder="e.g., Great communication, strong problem-solving skills, needs improvement in time management."
-                />
-              </Box>
-              <Box>
-                <Button
-                  variant="contained"
-                  color="primary"
-                  onClick={() => handleSubmit(fb.id)}
-                  fullWidth
-                  sx={{ fontWeight: 'bold' }}
-                >
-                  Submit Feedback
-                </Button>
-                {fb.feedback && (
-                  <Typography variant="body2" sx={{ mt: 1, color: 'text.secondary', fontStyle: 'italic' }}>
-                    <strong>Previously Submitted:</strong> {fb.feedback}
-                  </Typography>
-                )}
-              </Box>
-            </Paper>
-          </Grid>
-        ))}
-      </Grid>
-
-      {(feedback || []).length === 0 && (
-        <Typography variant="body1" sx={{ mt: 2, color: 'text.secondary' }}>
-          No interviews scheduled. Please check back later.
-        </Typography>
-      )}
+      {view === 'list' ? renderCandidateList() : renderCandidateDetails()}
     </Paper>
   );
-};
-
-InterviewerPanel.propTypes = {
-  feedback: PropTypes.array,
-  submitFeedback: PropTypes.func.isRequired,
-};
-
-InterviewerPanel.defaultProps = {
-  feedback: [
-    {
-      id: '1',
-      candidate: 'Alice Johnson',
-      interviewDate: '2024-12-20',
-      feedback: 'Rating: 4 star(s) - Strong analytical thinking and proactive problem-solving.'
-    },
-    {
-      id: '2',
-      candidate: 'Bob Williams',
-      interviewDate: '2024-12-22',
-      feedback: ''
-    },
-    {
-      id: '3',
-      candidate: 'Catherine Smith',
-      interviewDate: '2024-12-25',
-      feedback: 'Rating: 5 star(s) - Excellent communication and cultural fit.'
-    },
-  ],
 };
 
 export default InterviewerPanel;

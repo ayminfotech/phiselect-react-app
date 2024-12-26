@@ -1,3 +1,4 @@
+// src/components/JobCard.jsx
 import React from 'react';
 import PropTypes from 'prop-types';
 import {
@@ -8,14 +9,13 @@ import {
   Box,
   Avatar,
   Divider,
-  Chip,
-  Tooltip,
 } from '@mui/material';
 import PositionCard from './PositionCard';
 import commonStyles from '../styles/commonStyles';
 
 const JobCard = ({ job }) => {
   const {
+    jobId, // Ensure jobId is included
     organizationName,
     companyLogoUrl,
     jobTitle,
@@ -36,13 +36,11 @@ const JobCard = ({ job }) => {
         {/* Header */}
         <Box display="flex" alignItems="center" mb={2}>
           {companyLogoUrl ? (
-            <Tooltip title={`${organizationName} Logo`}>
-              <Avatar
-                src={companyLogoUrl}
-                alt={organizationName}
-                sx={{ width: 60, height: 60, mr: 2 }}
-              />
-            </Tooltip>
+            <Avatar
+              src={companyLogoUrl}
+              alt={`${organizationName} Logo`}
+              sx={{ width: 60, height: 60, mr: 2 }}
+            />
           ) : (
             <Avatar sx={{ width: 60, height: 60, mr: 2 }}>
               {organizationName?.charAt(0) || 'N/A'}
@@ -94,10 +92,10 @@ const JobCard = ({ job }) => {
             Open Positions ({openPositions.length})
           </Typography>
           {openPositions.length > 0 ? (
-            <Grid container spacing={2}>
+            <Grid container spacing={2} mt={1}>
               {openPositions.map((position) => (
                 <Grid item xs={12} sm={6} key={position.positionId}>
-                  <PositionCard jobId={job.id} position={position} jobTitle={jobTitle} />
+                  <PositionCard jobId={jobId} position={position} />
                 </Grid>
               ))}
             </Grid>
@@ -114,7 +112,7 @@ const JobCard = ({ job }) => {
 
 JobCard.propTypes = {
   job: PropTypes.shape({
-    id: PropTypes.string.isRequired,
+    jobId: PropTypes.string.isRequired, // Ensure jobId is present
     organizationName: PropTypes.string,
     companyLogoUrl: PropTypes.string,
     jobTitle: PropTypes.string.isRequired,
@@ -127,7 +125,9 @@ JobCard.propTypes = {
     positions: PropTypes.arrayOf(
       PropTypes.shape({
         positionId: PropTypes.string.isRequired,
+        positionCode: PropTypes.string.isRequired,
         status: PropTypes.string.isRequired,
+        // Add other position fields as necessary
       })
     ),
   }).isRequired,
