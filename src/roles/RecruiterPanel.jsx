@@ -1,4 +1,5 @@
-// src/components/RecruiterPanel.js
+// src/components/RecruiterPanel.jsx
+
 import React, { useEffect, useState } from 'react';
 import {
   Box,
@@ -9,30 +10,47 @@ import {
   Alert,
   Button,
   IconButton,
+  Chip,
+  Tooltip,
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { DataGrid } from '@mui/x-data-grid';
 import { useSnackbar } from 'notistack';
 
 // Services
+import { getAssignedJobsByRecruiter } from '../services/jobService';
+import { getCandidates } from '../services/candidateService';
 import {
-  getAssignedJobsByRecruiter,
-  // Possibly other job services
-} from '../services/jobService';
-import {
-  getCandidates,
-} from '../services/candidateService';
+  getScheduledInterviewsByCandidate,
+  cancelInterview,
+  updateInterview,
+} from '../services/interviewerService'; // Ensure correct service file
 
-// Child modals
+// Child modals and components
 import AddCandidate from './AddCandidate';
 import ScheduleInterviewModal from './ScheduleInterviewModal';
 import BatchScheduleInterviewModal from './BatchScheduleInterviewModal';
+import InterviewDetailsModal from './InterviewDetailsModal';
+
+// Helper functions
+const getUserRole = () => {
+  const authData = localStorage.getItem('auth');
+  const auth = authData ? JSON.parse(authData) : null;
+  return auth?.role || 'recruiter'; // Default to 'recruiter' if not set
+};
+
+const getUserId = () => {
+  const authData = localStorage.getItem('auth');
+  const auth = authData ? JSON.parse(authData) : null;
+  return auth?.userRefId || null;
+};
 
 const RecruiterPanel = () => {
   const { enqueueSnackbar } = useSnackbar();
 
-  // "views": 'jobs' | 'positions' | 'candidateScreen'
+  // Views: 'jobs' | 'positions' | 'candidateScreen'
   const [currentView, setCurrentView] = useState('jobs');
+
   // Loading & error states
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -50,12 +68,21 @@ const RecruiterPanel = () => {
   const [openAddCandidate, setOpenAddCandidate] = useState(false);
   const [openScheduleModal, setOpenScheduleModal] = useState(false);
   const [openBatchScheduleModal, setOpenBatchScheduleModal] = useState(false);
+  const [openInterviewDetails, setOpenInterviewDetails] = useState(false);
 
   // Single-candidate interview
   const [candidateForInterview, setCandidateForInterview] = useState(null);
 
   // Multiple candidates for batch scheduling
   const [selectedCandidateIds, setSelectedCandidateIds] = useState([]);
+
+  // State for Interview Details Modal
+  const [selectedInterview, setSelectedInterview] = useState(null);
+  const [selectedInterviewCandidateId, setSelectedInterviewCandidateId] = useState(null);
+
+  // User Info
+  const userRole = getUserRole(); // 'recruiter' or 'interviewer'
+  const userId = getUserId(); // Logged-in user's ID
 
   //------------------------------------------------------------
   // 1) On mount, fetch assigned Jobs
@@ -66,22 +93,24 @@ const RecruiterPanel = () => {
       setError(null);
       try {
         const assignedJobs = await getAssignedJobsByRecruiter();
+        console.log('Assigned Jobs:', assignedJobs); // Debugging
         setJobs(assignedJobs);
       } catch (err) {
         console.error('Error fetching jobs:', err);
         setError(err.message || 'Failed to fetch jobs');
+        enqueueSnackbar('Failed to fetch jobs.', { variant: 'error' });
       } finally {
         setLoading(false);
       }
     };
     fetchJobs();
-  }, []);
+  }, [enqueueSnackbar]);
 
   //------------------------------------------------------------
   // Handle Job Click
   //------------------------------------------------------------
   const handleJobClick = (job) => {
-    console.log('Job clicked:', job); // Debugging
+    console.log('Selected Job:', job); // Debugging
     setSelectedJob(job);
     setPositions(job.positions || []);
     setError(null);
@@ -89,7 +118,7 @@ const RecruiterPanel = () => {
   };
 
   //------------------------------------------------------------
-  // Job Columns Configuration
+  // Job Columns
   //------------------------------------------------------------
   const jobColumns = [
     { field: 'jobRefId', headerName: 'Job Ref', width: 120 },
@@ -156,19 +185,85 @@ const RecruiterPanel = () => {
   // Handle Position Click
   //------------------------------------------------------------
   const handlePositionClick = async (position) => {
-    console.log('Position clicked:', position); // Debugging
+    console.log('Selected Position:', position); // Debugging
     setSelectedPosition(position);
     setLoading(true);
     setError(null);
 
     try {
-      const positionCandidates = await getCandidates(position.positionId, '');
-      console.log('Fetched candidates:', positionCandidates); // Debugging
-      setCandidates(positionCandidates);
+      const response = await getCandidates(position.positionId, '');
+      console.log('GetCandidates Response:', response); // Debugging
+      console.log('Type of response:', typeof response);
+      console.log('Is Array:', Array.isArray(response));
+
+      let positionCandidates = [];
+
+      // Parse the response if it's a string
+      if (typeof response === 'string') {
+        try {
+          positionCandidates = JSON.parse(response);
+          console.log('Parsed Candidates:', positionCandidates); // Debugging
+        } catch (parseError) {
+          console.error('Error parsing candidates JSON:', parseError);
+          throw new Error('Failed to parse candidates data.');
+        }
+      } else if (Array.isArray(response)) {
+        positionCandidates = response;
+      } else if (response && Array.isArray(response.data)) {
+        positionCandidates = response.data;
+      } else {
+        throw new Error('Invalid data format for candidates.');
+      }
+
+      console.log('Fetched Candidates:', positionCandidates); // Debugging
+
+      // Function to sanitize candidates and fetch their interviews
+      const sanitizeCandidates = async (candidates) => {
+        if (!Array.isArray(candidates)) return [];
+        // For each candidate, fetch their scheduled interviews
+        const sanitized = await Promise.all(
+          candidates.map(async (candidate) => {
+            let interviews = [];
+            try {
+              // Ensure correct property access
+              const candidateId = candidate.id || candidate.candidateId;
+              console.log('Fetching interviews for candidate ID:', candidateId); // Debugging
+
+              if (!candidateId) {
+                console.error('Candidate ID is undefined:', candidate);
+                interviews = [];
+              } else {
+                interviews = await getScheduledInterviewsByCandidate(candidateId);
+                console.log(`Fetched Interviews for Candidate ${candidateId}:`, interviews); // Debugging
+              }
+            } catch (error) {
+              console.error(
+                `Error fetching interviews for candidate ${
+                  candidate.id || candidate.candidateId
+                }:`,
+                error
+              );
+              // Optionally, handle the error or set interviews to an empty array
+              interviews = [];
+            }
+            return {
+              ...candidate,
+              id: candidate.id || candidate.candidateId, // Ensure unique id
+              scheduledInterviews: Array.isArray(interviews) ? interviews : [],
+            };
+          })
+        );
+        return sanitized;
+      };
+
+      const sanitizedCandidates = await sanitizeCandidates(positionCandidates);
+      console.log('Sanitized Candidates with Interviews:', sanitizedCandidates); // Debugging
+
+      setCandidates(sanitizedCandidates);
       setCurrentView('candidateScreen');
     } catch (err) {
       console.error('Error loading candidates:', err);
-      enqueueSnackbar('Failed to load candidates', { variant: 'error' });
+      enqueueSnackbar('Failed to load candidates.', { variant: 'error' });
       setError('Failed to load candidates.');
     } finally {
       setLoading(false);
@@ -176,7 +271,7 @@ const RecruiterPanel = () => {
   };
 
   //------------------------------------------------------------
-  // Position Columns Configuration
+  // Position Columns
   //------------------------------------------------------------
   const positionColumns = [
     { field: 'positionCode', headerName: 'Position Code', flex: 1 },
@@ -207,11 +302,10 @@ const RecruiterPanel = () => {
       <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
         <IconButton
           onClick={() => {
-            console.log('Navigating back to Jobs view'); // Debugging
             setCurrentView('jobs');
             setPositions([]);
             setSelectedJob(null);
-            setSelectedCandidateIds([]); // Reset selection
+            setSelectedCandidateIds([]);
           }}
           aria-label="back to jobs"
         >
@@ -237,7 +331,9 @@ const RecruiterPanel = () => {
             pageSize={5}
             rowsPerPageOptions={[5, 10]}
             disableSelectionOnClick
-            sx={{ '& .MuiDataGrid-row:hover': { backgroundColor: '#f9f9f9' } }}
+            sx={{
+              '& .MuiDataGrid-row:hover': { backgroundColor: '#f9f9f9' },
+            }}
           />
         </Box>
       )}
@@ -248,13 +344,83 @@ const RecruiterPanel = () => {
   // Handle Schedule Interview Click
   //------------------------------------------------------------
   const handleScheduleInterviewClick = (candidate) => {
-    console.log('Schedule button clicked for candidate:', candidate); // Debugging
+    console.log('Scheduling Interview for Candidate:', candidate); // Debugging
     setCandidateForInterview(candidate);
     setOpenScheduleModal(true);
   };
 
   //------------------------------------------------------------
-  // Candidate Columns Configuration
+  // Handle View Interviews Click
+  //------------------------------------------------------------
+  const handleViewInterviews = (candidate) => {
+    console.log('Viewing Interviews for Candidate:', candidate); // Debugging
+    console.log('Scheduled Interviews:', candidate.scheduledInterviews); // Debugging
+    setSelectedInterview(candidate.scheduledInterviews);
+    setSelectedInterviewCandidateId(candidate.id || candidate.candidateId);
+    setOpenInterviewDetails(true);
+  };
+
+  //------------------------------------------------------------
+  // Handle Cancel Interview
+  //------------------------------------------------------------
+  const handleCancelInterview = async (interviewRefId, candidateId) => {
+    try {
+      await cancelInterview(candidateId, interviewRefId);
+      enqueueSnackbar('Interview cancelled successfully!', { variant: 'success' });
+
+      // Refresh the candidate's interviews
+      const updatedInterviews = await getScheduledInterviewsByCandidate(candidateId);
+      setCandidates((prev) =>
+        prev.map((cand) =>
+          cand.id === candidateId
+            ? { ...cand, scheduledInterviews: updatedInterviews }
+            : cand
+        )
+      );
+
+      // Also update the selectedInterview state if it's for the same candidate
+      if (selectedInterviewCandidateId === candidateId) {
+        setSelectedInterview(updatedInterviews);
+      }
+
+      // Optionally, close the modal after cancelling
+      setOpenInterviewDetails(false);
+    } catch (error) {
+      console.error('Error cancelling interview:', error);
+      enqueueSnackbar('Failed to cancel interview.', { variant: 'error' });
+    }
+  };
+
+  //------------------------------------------------------------
+  // Handle Update Interview Click
+  //------------------------------------------------------------
+  const handleUpdateInterview = async (interviewRefId, candidateId, newDateTime) => {
+    try {
+      await updateInterview(candidateId, interviewRefId, newDateTime);
+      enqueueSnackbar('Interview updated successfully!', { variant: 'success' });
+
+      // Refresh the candidate's interviews
+      const updatedInterviews = await getScheduledInterviewsByCandidate(candidateId);
+      setCandidates((prev) =>
+        prev.map((cand) =>
+          cand.id === candidateId
+            ? { ...cand, scheduledInterviews: updatedInterviews }
+            : cand
+        )
+      );
+
+      // Also update the selectedInterview state if it's for the same candidate
+      if (selectedInterviewCandidateId === candidateId) {
+        setSelectedInterview(updatedInterviews);
+      }
+    } catch (error) {
+      console.error('Error updating interview:', error);
+      enqueueSnackbar('Failed to update interview.', { variant: 'error' });
+    }
+  };
+
+  //------------------------------------------------------------
+  // Candidate Columns
   //------------------------------------------------------------
   const candidateColumns = [
     { field: 'id', headerName: 'ID', width: 80 },
@@ -262,9 +428,61 @@ const RecruiterPanel = () => {
     { field: 'lastName', headerName: 'Last Name', flex: 1 },
     { field: 'email', headerName: 'Email', flex: 1 },
     {
+      field: 'scheduledInterviews',
+      headerName: 'Scheduled Interviews',
+      width: 250,
+      renderCell: (params) => {
+        const interviews = params.value;
+        const hasInterviews = Array.isArray(interviews) && interviews.length > 0;
+
+        // Prepare tooltip content
+        const tooltipContent = hasInterviews ? (
+          interviews.map((interview) => (
+            <Box key={interview.interviewRefId} sx={{ mb: 1 }}>
+              <Typography variant="body2">
+                <strong>Date & Time:</strong>{' '}
+                {new Date(interview.scheduledDateTime).toLocaleString()}
+              </Typography>
+              <Typography variant="body2">
+                <strong>Round:</strong> {interview.roundNumber}
+              </Typography>
+              <Typography variant="body2">
+                <strong>Status:</strong>{' '}
+                <Chip
+                  label={interview.status}
+                  color={
+                    interview.status.toUpperCase() === 'CANCELLED'
+                      ? 'error'
+                      : interview.status.toUpperCase() === 'COMPLETED'
+                      ? 'success'
+                      : 'primary'
+                  }
+                  size="small"
+                />
+              </Typography>
+              <Divider sx={{ my: 0.5 }} />
+            </Box>
+          ))
+        ) : (
+          'No Interviews Scheduled'
+        );
+
+        return (
+          <Tooltip title={tooltipContent} arrow placement="top">
+            <Chip
+              label={hasInterviews ? interviews.length : '0'}
+              color={hasInterviews ? 'primary' : 'default'}
+              size="small"
+            />
+          </Tooltip>
+        );
+      },
+      sortable: false,
+    },
+    {
       field: 'actions',
       headerName: 'Actions',
-      width: 180,
+      width: 220,
       sortable: false,
       renderCell: (params) => (
         <>
@@ -276,10 +494,26 @@ const RecruiterPanel = () => {
           >
             Schedule Interview
           </Button>
+          <Button
+            variant="outlined"
+            size="small"
+            onClick={() => handleViewInterviews(params.row)}
+            sx={{ textTransform: 'none' }}
+          >
+            View Interviews
+          </Button>
         </>
       ),
     },
   ];
+
+  //------------------------------------------------------------
+  // Handle Batch Schedule Interview Click
+  //------------------------------------------------------------
+  const handleBatchScheduleClick = () => {
+    console.log('Batch Scheduling Interviews for Candidate IDs:', selectedCandidateIds); // Debugging
+    setOpenBatchScheduleModal(true);
+  };
 
   //------------------------------------------------------------
   // Render Candidates View
@@ -289,7 +523,6 @@ const RecruiterPanel = () => {
       <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
         <IconButton
           onClick={() => {
-            console.log('Navigating back to Positions view'); // Debugging
             setCurrentView('positions');
             setCandidates([]);
             setSelectedPosition(null);
@@ -352,9 +585,15 @@ const RecruiterPanel = () => {
       <AddCandidate
         open={openAddCandidate}
         handleClose={(newlyAdded) => {
+          console.log('Newly Added Candidates:', newlyAdded); // Debugging
           setOpenAddCandidate(false);
           if (newlyAdded && newlyAdded.length > 0) {
-            setCandidates((prev) => [...prev, ...newlyAdded]);
+            const mappedNewCandidates = newlyAdded.map((candidate) => ({
+              ...candidate,
+              id: candidate.id || candidate.candidateId, // Ensure unique id
+              scheduledInterviews: [],
+            }));
+            setCandidates((prev) => [...prev, ...mappedNewCandidates]);
             enqueueSnackbar(`${newlyAdded.length} candidate(s) added successfully!`, {
               variant: 'success',
             });
@@ -369,15 +608,23 @@ const RecruiterPanel = () => {
         open={openScheduleModal}
         onClose={() => setOpenScheduleModal(false)}
         candidate={candidateForInterview}
-        onInterviewScheduled={(updatedCandidate) => {
-          console.log('Interview scheduled for candidate:', updatedCandidate); // Debugging
-          // Update the candidate list with the scheduled interview info
-          setCandidates((prev) =>
-            prev.map((cand) =>
-              cand.id === updatedCandidate.candidateId ? { ...cand, scheduledInterviews: [...(cand.scheduledInterviews || []), updatedCandidate] } : cand
-            )
-          );
-          enqueueSnackbar('Interview scheduled successfully!', { variant: 'success' });
+        onInterviewScheduled={async (updatedInterview) => {
+          console.log('Interview Scheduled:', updatedInterview); // Debugging
+          // Fetch the latest interviews for the candidate
+          try {
+            const interviews = await getScheduledInterviewsByCandidate(candidateForInterview.id);
+            setCandidates((prev) =>
+              prev.map((cand) =>
+                cand.id === candidateForInterview.id
+                  ? { ...cand, scheduledInterviews: interviews }
+                  : cand
+              )
+            );
+            enqueueSnackbar('Interview scheduled successfully!', { variant: 'success' });
+          } catch (error) {
+            console.error('Error fetching updated interviews:', error);
+            enqueueSnackbar('Failed to update scheduled interviews.', { variant: 'error' });
+          }
         }}
       />
 
@@ -386,33 +633,48 @@ const RecruiterPanel = () => {
         open={openBatchScheduleModal}
         onClose={() => setOpenBatchScheduleModal(false)}
         candidateIds={selectedCandidateIds}
-        onBatchInterviewScheduled={(updatedCandidates) => {
-          console.log('Batch interviews scheduled for candidates:', updatedCandidates); // Debugging
-          // Update the candidate list with updated info
-          setCandidates((prev) =>
-            prev.map((cand) => {
-              const updated = updatedCandidates.find((u) => u.id === cand.id);
-              return updated ? { ...cand, scheduledInterviews: [...(cand.scheduledInterviews || []), ...updated.scheduledInterviews] } : cand;
-            })
-          );
-          setSelectedCandidateIds([]);
-          enqueueSnackbar('Interviews scheduled successfully!', { variant: 'success' });
+        onBatchInterviewScheduled={async (updatedCandidates) => {
+          console.log('Batch Interviews Scheduled for Candidates:', updatedCandidates); // Debugging
+          // Update the candidate list with updated interviews
+          try {
+            const updatedInterviewPromises = updatedCandidates.map((candidateId) =>
+              getScheduledInterviewsByCandidate(candidateId)
+            );
+            const allUpdatedInterviews = await Promise.all(updatedInterviewPromises);
+
+            setCandidates((prev) =>
+              prev.map((cand) => {
+                const index = updatedCandidates.indexOf(cand.id);
+                if (index !== -1) {
+                  return { ...cand, scheduledInterviews: allUpdatedInterviews[index] };
+                }
+                return cand;
+              })
+            );
+
+            setSelectedCandidateIds([]);
+            enqueueSnackbar('Interviews scheduled successfully!', { variant: 'success' });
+          } catch (error) {
+            console.error('Error fetching updated interviews:', error);
+            enqueueSnackbar('Failed to update scheduled interviews.', { variant: 'error' });
+          }
         }}
+      />
+
+      {/* Interview Details Modal */}
+      <InterviewDetailsModal
+        open={openInterviewDetails}
+        onClose={() => setOpenInterviewDetails(false)}
+        interviews={selectedInterview}
+        candidateId={selectedInterviewCandidateId} // Pass candidateId
+        onCancelInterview={handleCancelInterview} // Pass the cancel function
+        onUpdateInterview={handleUpdateInterview} // Pass the update function
       />
     </Box>
   );
 
   //------------------------------------------------------------
-  // Handle Batch Schedule Interview Click
-  //------------------------------------------------------------
-  const handleBatchScheduleClick = () => {
-    console.log('Batch schedule interviews clicked for candidates:', selectedCandidateIds); // Debugging
-    // Opens the BatchScheduleInterviewModal
-    setOpenBatchScheduleModal(true);
-  };
-
-  //------------------------------------------------------------
-  // Render Component
+  // Render
   //------------------------------------------------------------
   return (
     <Paper elevation={3} sx={{ p: 4, borderRadius: 2, backgroundColor: '#f9f9f9' }}>
