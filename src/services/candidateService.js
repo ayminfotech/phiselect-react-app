@@ -104,38 +104,40 @@ export const addCandidate = async (candidateData, resumeFile) => {
 };
 
 /**
- * Batch-add multiple candidates with resumes.
+ * Batch-add multiple candidates with optional resumes.
+ *
+ * @param {Array} candidates - Array of candidate objects to be added.
+ * @param {Function} setSuccessMessage - Function to update success message in UI.
+ * @param {Function} setErrorMessage - Function to update error message in UI.
+ * @returns {Promise<Array>} - Array of created candidate objects.
  */
 export const addCandidates = async (candidates, setSuccessMessage, setErrorMessage) => {
   try {
     const formData = new FormData();
 
-    // Prepare candidate data
+    // Append candidate data
     const candidateData = candidates.map((candidate) => ({
-      candidateId: candidate.id, // Assuming each candidate has a UUID
       firstName: candidate.firstName,
       lastName: candidate.lastName,
       email: candidate.email,
       phoneNumber: candidate.phoneNumber,
-      currentCompany: candidate.currentCompany,
-      previousCompanies: candidate.previousCompanies,
-      skillSet: candidate.skillSet,
+      currentCompany: candidate.currentCompany || '',
+      skillSet: candidate.skillSet || '',
       panCardNumber: candidate.panCardNumber,
       recruiterRefId: candidate.recruiterRefId,
-      appliedPositionIds: candidate.appliedPositionIds, // Assuming this is an array of strings
+      appliedPositions: candidate.appliedPositions, // Assuming this is an array of PositionDTO
     }));
 
-    // Append data to FormData
     formData.append('candidates', JSON.stringify(candidateData));
 
-    // Append resume files
+    // Append resume files, if provided
     candidates.forEach((candidate, index) => {
       if (candidate.resumeFile) {
-        // To handle multiple resumes, append with a unique key
         formData.append(`resumes[${index}]`, candidate.resumeFile);
       }
     });
 
+    // Send POST request to batch-add endpoint
     const response = await axiosInstance.post('/batch-add', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
@@ -145,15 +147,13 @@ export const addCandidates = async (candidates, setSuccessMessage, setErrorMessa
     // Check for successful creation
     if (response.status === 201) {
       setSuccessMessage('Candidates added successfully!');
-      console.log('Created candidates:', response.data.candidates); // Log created candidates
+      console.log('Created candidates:', response.data); // Log created candidates for debugging
+      return response.data; // Return the created candidates
     }
-
-    // Return the created candidate data
-    return response.data.candidates;
   } catch (error) {
     console.error('Error adding candidates:', error);
 
-    // Handle error properly based on status code
+    // Handle error responses and update UI messages
     if (error.response) {
       if (error.response.status === 400 || error.response.status === 500) {
         setErrorMessage(error.response.data.error || 'An error occurred while adding candidates.');
@@ -164,11 +164,9 @@ export const addCandidates = async (candidates, setSuccessMessage, setErrorMessa
       setErrorMessage('Network error or server not reachable.');
     }
 
-    // Optionally, throw the error to be handled by UI
     throw error.response?.data || 'Error adding candidates.';
   }
 };
-
 /**
  * Assign an interview to a candidate.
  * POST /api/candidates/{candidateId}/assign-interview

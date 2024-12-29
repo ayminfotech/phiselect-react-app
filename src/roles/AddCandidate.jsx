@@ -1,3 +1,5 @@
+// src/components/AddCandidate.jsx
+
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import {
@@ -10,8 +12,13 @@ import {
   Grid,
   IconButton,
   TextField,
+  Select,
+  MenuItem,
+  InputLabel,
+  FormControl,
+  FormHelperText,
 } from '@mui/material';
-import { Formik, Form, Field, FieldArray } from 'formik';
+import { Formik, Form, FieldArray } from 'formik';
 import * as Yup from 'yup';
 import { addCandidates } from '../services/candidateService';
 import CloseIcon from '@mui/icons-material/Close';
@@ -19,13 +26,17 @@ import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
 
+/**
+ * Styling for the modal using MUI's sx prop.
+ * Centers the modal and ensures responsiveness.
+ */
 const modalStyle = {
   position: 'absolute',
   top: '50%',
   left: '50%',
   transform: 'translate(-50%, -50%)',
   width: '95%',
-  maxWidth: 800,
+  maxWidth: 900,
   bgcolor: 'background.paper',
   borderRadius: 2,
   boxShadow: 24,
@@ -34,6 +45,10 @@ const modalStyle = {
   overflowY: 'auto',
 };
 
+/**
+ * Validation schema for each candidate using Yup.
+ * Ensures all required fields are filled and formatted correctly.
+ */
 const CandidateSchema = Yup.object().shape({
   firstName: Yup.string().required('First name is required'),
   lastName: Yup.string().required('Last name is required'),
@@ -42,12 +57,53 @@ const CandidateSchema = Yup.object().shape({
     .matches(/^[0-9]{10}$/, 'Phone number must be exactly 10 digits')
     .required('Phone number is required'),
   panCardNumber: Yup.string().required('PAN card number is required'),
-  // Add other validations as needed
+  appliedPositions: Yup.array()
+    .of(
+      Yup.object().shape({
+        positionId: Yup.string().required('Position ID is required'),
+        positionCode: Yup.string().required('Position Code is required'),
+      })
+    )
+    .min(1, 'At least one applied position is required'),
+  resumeFile: Yup.mixed()
+    .required('Resume is required')
+    .test(
+      'fileSize',
+      'File size is too large (max 5MB)',
+      (value) => value && value.size <= 5242880
+    )
+    .test(
+      'fileFormat',
+      'Unsupported Format (only PDF, DOC, DOCX)',
+      (value) =>
+        value &&
+        ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'].includes(
+          value.type
+        )
+    ),
 });
 
-const AddCandidate = ({ open, handleClose, jobId, positionId }) => {
+/**
+ * AddCandidate Component
+ *
+ * This component renders a modal form allowing recruiters to add multiple candidates
+ * along with their applied positions and resume uploads.
+ *
+ * Props:
+ * - open: Boolean indicating if the modal is open.
+ * - handleClose: Function to handle closing the modal.
+ * - jobId: String representing the Job ID.
+ * - positions: Array of position objects available for application.
+ */
+const AddCandidate = ({ open, handleClose, jobId, positions }) => {
+  // State variables to manage success and error messages.
   const [successMessage, setSuccessMessage] = useState(null);
-  const [errorMessage, setErrorMessage] = useState(null); // <-- Define the error state here
+  const [errorMessage, setErrorMessage] = useState(null);
+
+  /**
+   * Initial form values.
+   * Starts with one candidate by default.
+   */
   const initialValues = {
     candidates: [
       {
@@ -59,16 +115,30 @@ const AddCandidate = ({ open, handleClose, jobId, positionId }) => {
         previousCompanies: '',
         skillSet: '',
         panCardNumber: '',
-        recruiterRefId: 'RECRUITER_001', // Replace with actual recruiter ID
-        appliedPositionIds: positionId, // Assuming single position
+        recruiterRefId: 'RECRUITER_001', // Replace with actual recruiter ID from context/auth.
+        appliedPositions: [
+          {
+            positionId: '',
+            positionCode: '',
+          },
+        ],
         resumeFile: null,
       },
     ],
   };
 
+  /**
+   * Handles form submission.
+   * Prepares the payload and calls the addCandidates service.
+   * Displays appropriate success or error messages based on the response.
+   *
+   * @param {Object} values - Form values.
+   * @param {Function} setSubmitting - Formik function to set submitting state.
+   * @param {Function} resetForm - Formik function to reset the form.
+   */
   const handleSubmit = async (values, { setSubmitting, resetForm }) => {
     try {
-      // Prepare the payload from the form values
+      // Prepare the payload by mapping each candidate's data.
       const payload = values.candidates.map((candidate) => ({
         firstName: candidate.firstName,
         lastName: candidate.lastName,
@@ -79,34 +149,43 @@ const AddCandidate = ({ open, handleClose, jobId, positionId }) => {
         skillSet: candidate.skillSet,
         panCardNumber: candidate.panCardNumber,
         recruiterRefId: candidate.recruiterRefId,
-        appliedPositionIds: candidate.appliedPositionIds,
+        appliedPositions: candidate.appliedPositions,
+        // Resume files are handled separately in the service.
       }));
 
-      // Call the batch add service and pass success and error message setters
-      const createdCandidates = await addCandidates(values.candidates, setSuccessMessage, setErrorMessage);
+      // Call the batch add service, passing the candidates and state setters.
+      const createdCandidates = await addCandidates(
+        payload,
+        values.candidates,
+        setSuccessMessage,
+        setErrorMessage
+      );
 
-      // Check if the response is successful
+      // If candidates are successfully created, display success message and reset the form.
       if (createdCandidates) {
-        setSuccessMessage("Candidates added successfully!");
-        setErrorMessage(null); // Reset any previous errors
-        handleClose(createdCandidates); // Close the modal and pass data back to the parent
-        resetForm(); // Reset the form after submission
+        setSuccessMessage('Candidates added successfully!');
+        setErrorMessage(null);
+        handleClose(createdCandidates); // Pass the created candidates back to the parent component.
+        resetForm(); // Reset the form fields.
       }
     } catch (err) {
-      // Error handling
-      console.error("Error adding candidates:", err);
+      // Handle errors from the service.
+      console.error('Error adding candidates:', err);
       setErrorMessage(err.message || 'Failed to add candidates.');
-      setSuccessMessage(null); // Reset any previous success messages
+      setSuccessMessage(null);
     } finally {
+      // End the submitting state.
       setSubmitting(false);
     }
   };
 
-  // Modal close handler
+  /**
+   * Handles closing the modal.
+   * Resets the form and passes null to indicate no new candidates were added.
+   */
   const handleModalClose = () => {
-    handleClose(null); // Close the modal and reset form
+    handleClose(null); // Pass null to indicate no new candidates added.
   };
-
 
   return (
     <Modal
@@ -116,12 +195,19 @@ const AddCandidate = ({ open, handleClose, jobId, positionId }) => {
       aria-describedby="add-candidate-modal-description"
     >
       <Box sx={modalStyle}>
-        {/* Header */}
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+        {/* Header Section */}
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            mb: 2,
+          }}
+        >
           <Typography id="add-candidate-modal-title" variant="h6" component="h2">
             Add New Candidate(s)
           </Typography>
-          <IconButton onClick={() => handleClose(null)} aria-label="close">
+          <IconButton onClick={handleModalClose} aria-label="close">
             <CloseIcon />
           </IconButton>
         </Box>
@@ -148,14 +234,31 @@ const AddCandidate = ({ open, handleClose, jobId, positionId }) => {
           })}
           onSubmit={handleSubmit}
         >
-          {({ values, errors, touched, handleChange, setFieldValue, isSubmitting }) => (
+          {({
+            values,
+            errors,
+            touched,
+            handleChange,
+            setFieldValue,
+            isSubmitting,
+          }) => (
             <Form>
+              {/* FieldArray for managing multiple candidates */}
               <FieldArray name="candidates">
                 {({ push, remove }) => (
                   <div>
+                    {/* Iterate through each candidate */}
                     {values.candidates.map((candidate, index) => (
-                      <Box key={index} sx={{ mb: 4, p: 2, border: '1px solid #eee', borderRadius: 2 }}>
-                        <Grid container spacing={2} alignItems="center">
+                      <Box
+                        key={index}
+                        sx={{
+                          mb: 4,
+                          p: 2,
+                          border: '1px solid #eee',
+                          borderRadius: 2,
+                        }}
+                      >
+                        <Grid container spacing={2}>
                           {/* First Name */}
                           <Grid item xs={12} sm={6}>
                             <TextField
@@ -170,7 +273,10 @@ const AddCandidate = ({ open, handleClose, jobId, positionId }) => {
                                 touched.candidates &&
                                 touched.candidates[index] &&
                                 touched.candidates[index].firstName &&
-                                Boolean(errors.candidates && errors.candidates[index]?.firstName)
+                                Boolean(
+                                  errors.candidates &&
+                                    errors.candidates[index]?.firstName
+                                )
                               }
                               helperText={
                                 touched.candidates &&
@@ -196,7 +302,10 @@ const AddCandidate = ({ open, handleClose, jobId, positionId }) => {
                                 touched.candidates &&
                                 touched.candidates[index] &&
                                 touched.candidates[index].lastName &&
-                                Boolean(errors.candidates && errors.candidates[index]?.lastName)
+                                Boolean(
+                                  errors.candidates &&
+                                    errors.candidates[index]?.lastName
+                                )
                               }
                               helperText={
                                 touched.candidates &&
@@ -223,7 +332,10 @@ const AddCandidate = ({ open, handleClose, jobId, positionId }) => {
                                 touched.candidates &&
                                 touched.candidates[index] &&
                                 touched.candidates[index].email &&
-                                Boolean(errors.candidates && errors.candidates[index]?.email)
+                                Boolean(
+                                  errors.candidates &&
+                                    errors.candidates[index]?.email
+                                )
                               }
                               helperText={
                                 touched.candidates &&
@@ -250,7 +362,10 @@ const AddCandidate = ({ open, handleClose, jobId, positionId }) => {
                                 touched.candidates &&
                                 touched.candidates[index] &&
                                 touched.candidates[index].phoneNumber &&
-                                Boolean(errors.candidates && errors.candidates[index]?.phoneNumber)
+                                Boolean(
+                                  errors.candidates &&
+                                    errors.candidates[index]?.phoneNumber
+                                )
                               }
                               helperText={
                                 touched.candidates &&
@@ -314,7 +429,10 @@ const AddCandidate = ({ open, handleClose, jobId, positionId }) => {
                                 touched.candidates &&
                                 touched.candidates[index] &&
                                 touched.candidates[index].panCardNumber &&
-                                Boolean(errors.candidates && errors.candidates[index]?.panCardNumber)
+                                Boolean(
+                                  errors.candidates &&
+                                    errors.candidates[index]?.panCardNumber
+                                )
                               }
                               helperText={
                                 touched.candidates &&
@@ -341,7 +459,10 @@ const AddCandidate = ({ open, handleClose, jobId, positionId }) => {
                                 hidden
                                 accept=".pdf,.doc,.docx"
                                 onChange={(event) => {
-                                  setFieldValue(`candidates[${index}].resumeFile`, event.currentTarget.files[0]);
+                                  setFieldValue(
+                                    `candidates[${index}].resumeFile`,
+                                    event.currentTarget.files[0]
+                                  );
                                 }}
                               />
                             </Button>
@@ -353,14 +474,148 @@ const AddCandidate = ({ open, handleClose, jobId, positionId }) => {
                                 <IconButton
                                   color="error"
                                   size="small"
-                                  onClick={() => setFieldValue(`candidates[${index}].resumeFile`, null)}
+                                  onClick={() =>
+                                    setFieldValue(`candidates[${index}].resumeFile`, null)
+                                  }
                                   aria-label="remove resume"
                                 >
                                   <RemoveCircleOutlineIcon />
                                 </IconButton>
                               </Box>
                             )}
+                            {touched.candidates &&
+                              touched.candidates[index] &&
+                              touched.candidates[index].resumeFile &&
+                              errors.candidates &&
+                              errors.candidates[index]?.resumeFile && (
+                                <FormHelperText error>
+                                  {errors.candidates[index].resumeFile}
+                                </FormHelperText>
+                              )}
                           </Grid>
+
+                          {/* Applied Positions Section */}
+                          <FieldArray name={`candidates[${index}].appliedPositions`}>
+                            {({ push: pushPosition, remove: removePosition }) => (
+                              <Grid item xs={12}>
+                                <Typography variant="subtitle1" sx={{ mb: 1 }}>
+                                  Applied Position(s)
+                                </Typography>
+                                {candidate.appliedPositions.map((position, posIndex) => (
+                                  <Box
+                                    key={posIndex}
+                                    sx={{
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      mb: 2,
+                                      gap: 2,
+                                    }}
+                                  >
+                                    {/* Position Code (Dropdown) */}
+                                    <FormControl
+                                      fullWidth
+                                      variant="outlined"
+                                      error={
+                                        touched.candidates &&
+                                        touched.candidates[index] &&
+                                        touched.candidates[index].appliedPositions &&
+                                        touched.candidates[index].appliedPositions[posIndex] &&
+                                        touched.candidates[index].appliedPositions[posIndex].positionId &&
+                                        Boolean(
+                                          errors.candidates &&
+                                            errors.candidates[index]?.appliedPositions &&
+                                            errors.candidates[index].appliedPositions[posIndex]?.positionId
+                                        )
+                                      }
+                                    >
+                                      <InputLabel id={`positionCode-label-${index}-${posIndex}`}>
+                                        Position Code
+                                      </InputLabel>
+                                      <Select
+                                        labelId={`positionCode-label-${index}-${posIndex}`}
+                                        label="Position Code"
+                                        name={`candidates[${index}].appliedPositions[${posIndex}].positionId`}
+                                        value={position.positionId}
+                                        onChange={(e) => {
+                                          const selectedPositionId = e.target.value;
+                                          const selectedPosition = positions.find(
+                                            (pos) => pos.positionId === selectedPositionId
+                                          );
+                                          setFieldValue(
+                                            `candidates[${index}].appliedPositions[${posIndex}].positionId`,
+                                            selectedPositionId
+                                          );
+                                          setFieldValue(
+                                            `candidates[${index}].appliedPositions[${posIndex}].positionCode`,
+                                            selectedPosition
+                                              ? selectedPosition.positionCode
+                                              : ''
+                                          );
+                                        }}
+                                      >
+                                        {positions.map((pos) => (
+                                          <MenuItem key={pos.positionId} value={pos.positionId}>
+                                            {pos.positionCode}
+                                          </MenuItem>
+                                        ))}
+                                      </Select>
+                                      {touched.candidates &&
+                                        touched.candidates[index] &&
+                                        touched.candidates[index].appliedPositions &&
+                                        touched.candidates[index].appliedPositions[posIndex] &&
+                                        touched.candidates[index].appliedPositions[posIndex].positionId &&
+                                        errors.candidates &&
+                                        errors.candidates[index]?.appliedPositions &&
+                                        errors.candidates[index].appliedPositions[posIndex]?.positionId && (
+                                          <FormHelperText>
+                                            {errors.candidates[index].appliedPositions[posIndex].positionId}
+                                          </FormHelperText>
+                                        )}
+                                    </FormControl>
+
+                                    {/* Position Code Display (Read-Only) */}
+                                    <TextField
+                                      label="Position Code"
+                                      name={`candidates[${index}].appliedPositions[${posIndex}].positionCode`}
+                                      value={position.positionCode}
+                                      onChange={handleChange}
+                                      fullWidth
+                                      variant="outlined"
+                                      InputProps={{
+                                        readOnly: true,
+                                      }}
+                                    />
+
+                                    {/* Remove Position Button */}
+                                    {candidate.appliedPositions.length > 1 && (
+                                      <IconButton
+                                        color="error"
+                                        onClick={() => removePosition(posIndex)}
+                                        aria-label="remove position"
+                                      >
+                                        <RemoveCircleOutlineIcon />
+                                      </IconButton>
+                                    )}
+                                  </Box>
+                                ))}
+
+                                {/* Add Position Button */}
+                                <Button
+                                  variant="outlined"
+                                  startIcon={<AddCircleOutlineIcon />}
+                                  onClick={() =>
+                                    pushPosition({
+                                      positionId: '',
+                                      positionCode: '',
+                                    })
+                                  }
+                                  sx={{ textTransform: 'none' }}
+                                >
+                                  Add Position
+                                </Button>
+                              </Grid>
+                            )}
+                          </FieldArray>
 
                           {/* Remove Candidate Button */}
                           {values.candidates.length > 1 && (
@@ -395,7 +650,7 @@ const AddCandidate = ({ open, handleClose, jobId, positionId }) => {
                           skillSet: '',
                           panCardNumber: '',
                           recruiterRefId: 'RECRUITER_001',
-                          appliedPositionIds: positionId,
+                          appliedPositions: [{ positionId: '', positionCode: '' }],
                           resumeFile: null,
                         })
                       }
@@ -409,7 +664,11 @@ const AddCandidate = ({ open, handleClose, jobId, positionId }) => {
 
               {/* Submit Button */}
               <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3 }}>
-                <Button type="button" onClick={handleModalClose} sx={{ mr: 2, textTransform: 'none' }}>
+                <Button
+                  type="button"
+                  onClick={handleModalClose}
+                  sx={{ mr: 2, textTransform: 'none' }}
+                >
                   Cancel
                 </Button>
                 <Button
@@ -424,7 +683,7 @@ const AddCandidate = ({ open, handleClose, jobId, positionId }) => {
                 </Button>
               </Box>
 
-              {/* Submission Error */}
+              {/* Submission Error (if any) */}
               {errors.submit && (
                 <Alert severity="error" sx={{ mt: 2 }}>
                   {errors.submit}
@@ -438,11 +697,26 @@ const AddCandidate = ({ open, handleClose, jobId, positionId }) => {
   );
 };
 
+/**
+ * PropTypes for the AddCandidate component.
+ * Ensures that required props are passed and have correct types.
+ */
 AddCandidate.propTypes = {
   open: PropTypes.bool.isRequired,
   handleClose: PropTypes.func.isRequired,
   jobId: PropTypes.string.isRequired,
-  positionId: PropTypes.string.isRequired,
+  positions: PropTypes.arrayOf(
+    PropTypes.shape({
+      positionId: PropTypes.string.isRequired,
+      positionCode: PropTypes.string.isRequired,
+      status: PropTypes.string,
+      filledAt: PropTypes.string,
+      recruiterRefId: PropTypes.string,
+      candidateRefIds: PropTypes.array,
+      createdAt: PropTypes.string,
+      updatedAt: PropTypes.string,
+    })
+  ).isRequired,
 };
 
 export default AddCandidate;

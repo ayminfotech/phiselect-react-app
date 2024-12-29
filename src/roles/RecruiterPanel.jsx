@@ -81,7 +81,7 @@ const RecruiterPanel = () => {
   const [selectedInterviewCandidateId, setSelectedInterviewCandidateId] = useState(null);
 
   // User Info
-  const userRole = getUserRole(); // 'recruiter' or 'interviewer'
+  const userRole = getUserRole(); // 'recruiter' or 'admin'
   const userId = getUserId(); // Logged-in user's ID
 
   //------------------------------------------------------------
@@ -430,49 +430,45 @@ const RecruiterPanel = () => {
     {
       field: 'scheduledInterviews',
       headerName: 'Scheduled Interviews',
-      width: 250,
+      width: 200,
       renderCell: (params) => {
         const interviews = params.value;
         const hasInterviews = Array.isArray(interviews) && interviews.length > 0;
 
-        // Prepare tooltip content
-        const tooltipContent = hasInterviews ? (
-          interviews.map((interview) => (
-            <Box key={interview.interviewRefId} sx={{ mb: 1 }}>
-              <Typography variant="body2">
-                <strong>Date & Time:</strong>{' '}
-                {new Date(interview.scheduledDateTime).toLocaleString()}
-              </Typography>
-              <Typography variant="body2">
-                <strong>Round:</strong> {interview.roundNumber}
-              </Typography>
-              <Typography variant="body2">
-                <strong>Status:</strong>{' '}
-                <Chip
-                  label={interview.status}
-                  color={
-                    interview.status.toUpperCase() === 'CANCELLED'
-                      ? 'error'
-                      : interview.status.toUpperCase() === 'COMPLETED'
-                      ? 'success'
-                      : 'primary'
-                  }
-                  size="small"
-                />
-              </Typography>
-              <Divider sx={{ my: 0.5 }} />
-            </Box>
-          ))
-        ) : (
-          'No Interviews Scheduled'
-        );
-
         return (
-          <Tooltip title={tooltipContent} arrow placement="top">
+          <Tooltip
+            title={
+              hasInterviews
+                ? interviews.map((interview) => (
+                    <Box key={interview.interviewRefId} sx={{ mb: 1 }}>
+                      <Typography variant="body2">
+                        <strong>Date & Time:</strong>{' '}
+                        {new Date(interview.scheduledDateTime).toLocaleString()}
+                      </Typography>
+                      <Typography variant="body2">
+                        <strong>Interviewer:</strong> {interview.interviewerName || 'Unknown'}
+                      </Typography>
+                      <Typography variant="body2">
+                        <strong>Round:</strong> {interview.roundNumber}
+                      </Typography>
+                      <Typography variant="body2">
+                        <strong>Ref ID:</strong> {interview.interviewRefId}
+                      </Typography>
+                      <Divider sx={{ my: 0.5 }} />
+                    </Box>
+                  ))
+                : 'No Interviews Scheduled'
+            }
+            arrow
+            placement="top"
+          >
             <Chip
               label={hasInterviews ? interviews.length : '0'}
               color={hasInterviews ? 'primary' : 'default'}
               size="small"
+              onClick={() => handleViewInterviews(params.row)}
+              sx={{ cursor: 'pointer' }}
+              title={hasInterviews ? 'View Scheduled Interviews' : 'No Interviews Scheduled'}
             />
           </Tooltip>
         );
@@ -599,8 +595,8 @@ const RecruiterPanel = () => {
             });
           }
         }}
-        jobId={selectedJob?.jobId}
-        positionId={selectedPosition?.positionId}
+        jobId={selectedJob?.jobRefId} // Ensure you're passing the correct jobId
+        positions={positions} // Pass the positions array
       />
 
       {/* Single-Candidate Interview Modal */}
@@ -669,6 +665,7 @@ const RecruiterPanel = () => {
         candidateId={selectedInterviewCandidateId} // Pass candidateId
         onCancelInterview={handleCancelInterview} // Pass the cancel function
         onUpdateInterview={handleUpdateInterview} // Pass the update function
+        userRole={userRole} // Pass the userRole prop
       />
     </Box>
   );

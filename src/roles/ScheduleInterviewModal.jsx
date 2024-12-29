@@ -1,4 +1,4 @@
-// src/components/ScheduleInterviewModal.js
+// src/components/ScheduleInterviewModal.jsx
 import React, { useState, useEffect } from 'react';
 import {
   Modal,
@@ -55,16 +55,29 @@ const ScheduleInterviewModal = ({ open, onClose, candidate, onInterviewScheduled
   };
 
   const handleSubmit = async () => {
-    // Client-side validation
+    // Validate required fields
     if (!interviewDateTime || !interviewerRefId) {
       setError('Please select an interview date and an interviewer.');
       return;
     }
 
-    // Check if the selected datetime is in the future
     const now = new Date();
     if (interviewDateTime <= now) {
       setError('Scheduled date and time must be in the future.');
+      return;
+    }
+
+    // Ensure candidate has applied positions
+    if (!candidate.appliedPositions || candidate.appliedPositions.length === 0) {
+      setError('Candidate has no applied positions.');
+      return;
+    }
+
+    // Extract the first applied position
+    const firstAppliedPosition = candidate.appliedPositions[0];
+
+    if (!firstAppliedPosition || !firstAppliedPosition.positionId || !firstAppliedPosition.positionCode) {
+      setError('Invalid position information for the candidate.');
       return;
     }
 
@@ -72,20 +85,32 @@ const ScheduleInterviewModal = ({ open, onClose, candidate, onInterviewScheduled
     setError(null);
 
     try {
+      const selectedInterviewer = interviewers.find(
+        (interviewer) => interviewer.userId === interviewerRefId
+      );
+
+      if (!selectedInterviewer) {
+        setError('Selected interviewer not found.');
+        return;
+      }
+
       const interviewData = {
-        candidateId: candidate.id, // UUID
-        positionId: candidate.appliedPositionIds[0], // Assuming the first position
-        interviewerRefId, // UUID as string
-        scheduledDateTime: interviewDateTime.toISOString(), // ISO string with timezone
+        candidateId: candidate.id,
+        positionId: firstAppliedPosition.positionId,
+        positionName: firstAppliedPosition.positionCode, // Using positionCode as positionName
+        interviewerRefId,
+        interviewerName: `${selectedInterviewer.firstName} ${selectedInterviewer.lastName}`,
+        scheduledDateTime: interviewDateTime.toISOString(),
         roundNumber: interviewRound,
       };
+
       const scheduledInterview = await assignInterview(candidate.id, interviewData);
       enqueueSnackbar('Interview scheduled successfully!', { variant: 'success' });
       onInterviewScheduled(scheduledInterview);
       onClose();
     } catch (err) {
       console.error('Error scheduling interview:', err);
-      setError(err.message || 'Failed to schedule interview.');
+      setError(err.response?.data?.message || 'Failed to schedule interview.');
       enqueueSnackbar('Failed to schedule interview.', { variant: 'error' });
     } finally {
       setLoading(false);
@@ -145,12 +170,16 @@ const ScheduleInterviewModal = ({ open, onClose, candidate, onInterviewScheduled
               <MenuItem value="">
                 <em>Loading...</em>
               </MenuItem>
-            ) : (
+            ) : interviewers.length > 0 ? (
               interviewers.map((interviewer) => (
                 <MenuItem key={interviewer.userId} value={interviewer.userId}>
                   {interviewer.firstName} {interviewer.lastName} ({interviewer.email})
                 </MenuItem>
               ))
+            ) : (
+              <MenuItem value="">
+                <em>No interviewers available</em>
+              </MenuItem>
             )}
           </Select>
         </FormControl>

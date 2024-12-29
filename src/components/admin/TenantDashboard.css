@@ -1,19 +1,25 @@
 /* Root Variables */
 :root {
+    /* Colors */
     --color-primary: #333; /* Soft dark for text */
     --color-secondary: #f7f7f7; /* Light gray for backgrounds */
     --color-accent: #ff6f61; /* Coral accent for action */
     --color-muted: #999; /* Muted text color */
     --color-light: #ffffff; /* Pure white for content */
+    
+    /* Fonts */
     --font-family: 'Helvetica Neue', Arial, sans-serif; /* Clean font */
-    --border-radius: 8px;
-    --box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Elevated shadow for better contrast */
-    --transition: 0.3s ease-in-out;
     --font-size-base: 16px;
     --font-size-heading: 2.4rem;
     --font-size-subheading: 1.6rem;
+    
+    /* Layout */
+    --border-radius: 8px;
+    --box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Elevated shadow for better contrast */
+    --transition: 0.3s ease-in-out;
     --line-height: 1.6;
-
+    
+    /* Icons */
     --icon-size-small: 2rem; /* Uniform small icon size */
     --icon-size-large: 3rem; /* Larger icons (if needed) */
 }
@@ -29,7 +35,7 @@ body {
     overflow-x: hidden;
 }
 
-/* Container */
+/* Tenant Dashboard Container */
 .tenant-dashboard {
     max-width: 1200px;
     margin: auto;
@@ -40,10 +46,10 @@ body {
 }
 
 /* Role-Specific Classes */
-.tenant-dashboard.admin { /* Admin-specific styles can go here */ }
-.tenant-dashboard.manager { /* Manager-specific styles can go here */ }
-.tenant-dashboard.recruiter { /* Recruiter-specific styles can go here */ }
-.tenant-dashboard.interviewer { /* Interviewer-specific styles can go here */ }
+.tenant-dashboard--admin { /* Admin-specific styles can go here */ }
+.tenant-dashboard--manager { /* Manager-specific styles can go here */ }
+.tenant-dashboard--recruiter { /* Recruiter-specific styles can go here */ }
+.tenant-dashboard--interviewer { /* Interviewer-specific styles can go here */ }
 
 /* Navigation */
 .main-navigation {
@@ -57,7 +63,7 @@ body {
     z-index: 1000;
 }
 
-.main-navigation ul {
+.main-navigation__list {
     list-style: none;
     display: flex;
     justify-content: space-around;
@@ -65,7 +71,7 @@ body {
     margin: 0;
 }
 
-.main-navigation ul li {
+.main-navigation__item {
     padding: 15px 25px;
     border-radius: var(--border-radius);
     cursor: pointer;
@@ -74,17 +80,18 @@ body {
     text-align: center;
     color: var(--color-muted);
     font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
-/* Active Navigation Link */
-.main-navigation ul li.active {
+.main-navigation__item--active {
     background: var(--color-accent);
     color: var(--color-light);
     font-weight: 700;
 }
 
-/* Hover Effect for Navigation */
-.main-navigation ul li:hover {
+.main-navigation__item:hover {
     background: var(--color-accent);
     color: var(--color-light);
     transform: scale(1.05);
@@ -101,14 +108,14 @@ body {
     box-shadow: var(--box-shadow);
 }
 
-.dashboard-header h1 {
+.dashboard-header__title {
     font-size: var(--font-size-heading);
     margin: 0;
     font-weight: 700;
     letter-spacing: 0.5px;
 }
 
-.dashboard-header p {
+.dashboard-header__subtitle {
     font-size: 1.1rem;
     margin: 10px 0 0;
     color: var(--color-muted);
@@ -135,38 +142,35 @@ body {
     gap: 15px;
 }
 
-/* Hover Effect for Stats Cards */
 .stat-card:hover {
     transform: translateY(-7px);
     box-shadow: 0 12px 25px rgba(0, 0, 0, 0.2);
     background: var(--color-secondary);
 }
 
-/* Stat Icons */
-.stat-card .icon {
-    font-size: var(--icon-size-large); /* Default larger icon size */
+.stat-card__icon {
+    font-size: var(--icon-size-large);
     margin-bottom: 15px;
     color: var(--color-muted);
     transition: color var(--transition), font-size var(--transition);
 }
 
-/* Manager Role: Smaller Icon Size */
-.tenant-dashboard.manager .stat-card .icon {
-    font-size: var(--icon-size-small); /* Smaller size */
+.tenant-dashboard--manager .stat-card__icon {
+    font-size: var(--icon-size-small);
 }
 
-/* Hover Effect for Stat Icons */
-.stat-card:hover .icon {
+.stat-card:hover .stat-card__icon {
     color: var(--color-accent);
 }
 
-.stat-card .details h3 {
+.stat-card__details__value {
     margin: 0;
     font-size: 2rem;
     color: var(--color-primary);
+    font-weight: bold;
 }
 
-.stat-card .details p {
+.stat-card__details__title {
     margin: 5px 0 0;
     font-size: 1.1rem;
     color: var(--color-muted);
@@ -180,8 +184,7 @@ body {
     margin: 25px 0;
 }
 
-/* Role Button */
-.role-tabs button {
+.role-tabs__button {
     background: var(--color-secondary);
     border: 2px solid var(--color-muted);
     padding: 14px 30px;
@@ -194,15 +197,13 @@ body {
     color: var(--color-muted);
 }
 
-/* Active Role Button */
-.role-tabs button.active {
+.role-tabs__button--active {
     background: var(--color-accent);
     color: var(--color-light);
     transform: scale(1.1);
 }
 
-/* Hover Effect for Role Buttons */
-.role-tabs button:hover {
+.role-tabs__button:hover {
     background: var(--color-accent);
     color: var(--color-light);
     transform: scale(1.05);
@@ -219,14 +220,14 @@ body {
     text-align: center;
 }
 
-.role-content h3 {
-    font-size: 2rem;
+.role-content__title {
+    font-size: var(--font-size-heading);
     margin-bottom: 30px;
     font-weight: bold;
     color: var(--color-primary);
 }
 
-.role-content ul {
+.role-content__list {
     list-style: none;
     padding: 0;
     margin: 0;
@@ -234,8 +235,7 @@ body {
     overflow-y: auto;
 }
 
-/* Hover Effect for List Items */
-.role-content ul li {
+.role-content__item {
     padding: 18px;
     margin-bottom: 15px;
     background: var(--color-secondary);
@@ -244,10 +244,10 @@ body {
     font-weight: 500;
     color: var(--color-primary);
     transition: background var(--transition), color var(--transition), transform var(--transition);
+    cursor: pointer;
 }
 
-/* Hover Effect for List Items */
-.role-content ul li:hover {
+.role-content__item:hover {
     background: var(--color-accent);
     color: var(--color-light);
     transform: translateY(-3px);
@@ -258,14 +258,21 @@ body {
     margin-bottom: 30px;
 }
 
-.user-management h4 {
+.user-management__title {
     font-size: 1.6rem;
     margin-bottom: 10px;
     color: var(--color-primary);
 }
 
-.user-management input,
-.user-management select {
+.user-management__controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.user-management__controls input,
+.user-management__controls select {
     padding: 10px 15px;
     margin-right: 12px;
     border-radius: var(--border-radius);
@@ -273,7 +280,7 @@ body {
     font-size: 1.1rem;
 }
 
-.user-management button {
+.user-management__button {
     padding: 12px 25px;
     background-color: var(--color-accent);
     color: #fff;
@@ -284,16 +291,17 @@ body {
     transition: background-color var(--transition);
 }
 
-.user-management button:hover {
+.user-management__button:hover {
     background-color: #e74c3c;
 }
 
-.user-management ul {
+.user-management__list {
     list-style: none;
     padding: 0;
+    margin: 0;
 }
 
-.user-management ul li {
+.user-management__list-item {
     background: var(--color-light);
     padding: 15px;
     margin-bottom: 12px;
@@ -303,7 +311,7 @@ body {
     align-items: center;
 }
 
-.user-management ul li button {
+.user-management__list-item__button {
     background-color: var(--color-accent);
     padding: 8px 12px;
     font-size: 1rem;
@@ -313,6 +321,50 @@ body {
     transition: background-color var(--transition);
 }
 
-.user-management ul li button:hover {
+.user-management__list-item__button:hover {
     background-color: #e74c3c;
+}
+
+/* Additional Enhancements */
+
+/* Responsive Adjustments */
+@media (max-width: 600px) {
+    .main-navigation__list {
+        flex-direction: column;
+    }
+
+    .role-tabs {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .role-tabs__button {
+        width: 100%;
+    }
+}
+
+/* Links */
+.role-content a {
+    color: var(--color-accent);
+    text-decoration: none;
+    transition: color var(--transition);
+}
+
+.role-content a:hover {
+    color: var(--color-primary);
+}
+
+/* Scrollbar Styling for Role Content List */
+.role-content__list::-webkit-scrollbar {
+    width: 8px;
+}
+
+.role-content__list::-webkit-scrollbar-track {
+    background: var(--color-secondary);
+    border-radius: var(--border-radius);
+}
+
+.role-content__list::-webkit-scrollbar-thumb {
+    background-color: var(--color-muted);
+    border-radius: var(--border-radius);
 }

@@ -56,13 +56,12 @@ axiosInstance.interceptors.request.use(
 );
 
 /**
- * Fetch all interviews assigned to a specific interviewer.
- * GET /api/interviews/interviewers/{interviewerRefId}/interviews
+ * Fetch all interviews assigned to the currently logged-in interviewer.
+ * GET /api/candidates/interviews/assigned?interviewerRefId={interviewerRefId}
  *
- * @param {string} interviewerRefId - Reference ID of the interviewer
  * @returns {Promise<Array>} - Array of ScheduledInterview objects
  */
-export const getInterviewsByInterviewer = async (userRefId) => {
+export const getInterviewsByInterviewer = async () => {
   try {
     const authData = localStorage.getItem('auth');
     const auth = authData ? JSON.parse(authData) : null;
@@ -71,12 +70,19 @@ export const getInterviewsByInterviewer = async (userRefId) => {
       throw new Error('No token found');
     }
 
-    // Decode the token to extract tenantId and userRefId
+    // Decode the token to extract userRefId
     const decodedToken = jwtDecode(auth.token);
-    const tenantId = decodedToken.tenantId;  // Assuming tenantId is in the token payload
-    const userRefId = decodedToken.userRefID;  // Assuming userRefId is in the token payload
+    const userRefId = decodedToken.userRefID;  // Ensure this matches your token's payload
 
-    const response = await axiosInstance.get(`/candidates/interviewers/${userRefId}/interviews`);
+    if (!userRefId) {
+      throw new Error('User Reference ID not found in token');
+    }
+
+    // Make the API call to fetch assigned interviews
+    const response = await axiosInstance.get(`/candidates/interviews/assigned`, {
+      params: { interviewerRefId: userRefId },
+    });
+
     return response.data; // Assuming backend returns an array of interviews
   } catch (error) {
     console.error('Error fetching interviews by interviewer:', error);
@@ -96,7 +102,7 @@ export const getInterviewsByInterviewer = async (userRefId) => {
 export const provideInterviewFeedback = async (interviewerRefId, interviewRefId, feedbackData) => {
   try {
     const response = await axiosInstance.patch(
-      `/interviewers/${interviewerRefId}/interviews/${interviewRefId}/feedback`,
+      `/candidates/interviewers/${interviewerRefId}/interviews/${interviewRefId}/feedback`,
       feedbackData
     );
     return response.data; // Assuming backend returns the updated interview

@@ -1,3 +1,5 @@
+// src/components/InterviewerPanel.jsx
+
 import React, { useState, useEffect } from 'react';
 import {
   Box,
@@ -6,18 +8,16 @@ import {
   Divider,
   TextField,
   Button,
-  IconButton,
-  Tooltip,
-  Grid,
-  Avatar,
-  InputAdornment,
   CircularProgress,
   MenuItem,
   Chip,
   Alert,
+  InputAdornment,
+  FormControl,
+  InputLabel,
+  Select,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { DataGrid } from '@mui/x-data-grid';
 import { useSnackbar } from 'notistack';
 
@@ -75,8 +75,8 @@ const InterviewerPanel = ({ interviewerRefId }) => {
       const q = searchQuery.toLowerCase();
       const filtered = interviews.filter(
         (iv) =>
-          iv.candidateId.toLowerCase().includes(q) ||
-          (iv.positionId && iv.positionId.toLowerCase().includes(q))
+          (iv.positionName && iv.positionName.toLowerCase().includes(q)) ||
+          (iv.candidateName && iv.candidateName.toLowerCase().includes(q))
       );
       setFilteredInterviews(filtered);
     }
@@ -117,16 +117,14 @@ const InterviewerPanel = ({ interviewerRefId }) => {
   // Columns
   //------------------------------------------------------------
   const columns = [
-    { field: 'interviewRefId', headerName: 'Interview ID', width: 220 },
-    { field: 'candidateId', headerName: 'Candidate ID', width: 200 },
-    { field: 'positionId', headerName: 'Position ID', width: 200 },
+    { field: 'candidateName', headerName: 'Candidate Name', width: 200 },
+    { field: 'positionName', headerName: 'Position Name', width: 200 },
     {
-      field: 'scheduledDateTime',
-      headerName: 'Scheduled Date & Time',
-      width: 220,
-      valueFormatter: (params) => new Date(params.value).toLocaleString(),
+      field: 'roundNumber',
+      headerName: 'Round',
+      width: 120,
+      valueFormatter: (params) => formatRoundNumber(params.value),
     },
-    { field: 'roundNumber', headerName: 'Round', width: 120 },
     {
       field: 'status',
       headerName: 'Status',
@@ -168,6 +166,19 @@ const InterviewerPanel = ({ interviewerRefId }) => {
     }
   };
 
+  const formatRoundNumber = (round) => {
+    switch (round) {
+      case 'ROUND_1':
+        return 'Round 1';
+      case 'ROUND_2':
+        return 'Round 2';
+      case 'ROUND_3':
+        return 'Round 3';
+      default:
+        return round;
+    }
+  };
+
   //------------------------------------------------------------
   // Render
   //------------------------------------------------------------
@@ -192,7 +203,7 @@ const InterviewerPanel = ({ interviewerRefId }) => {
         <TextField
           fullWidth
           size="small"
-          placeholder="Search by Candidate ID or Position ID"
+          placeholder="Search by Position Name or Candidate Name"
           value={searchQuery}
           onChange={handleSearchChange}
           InputProps={{

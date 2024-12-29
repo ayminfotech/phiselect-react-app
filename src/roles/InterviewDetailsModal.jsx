@@ -7,9 +7,8 @@ import {
   Typography,
   Divider,
   Button,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
+  Card,
+  CardContent,
   Grid,
   Chip,
   Dialog,
@@ -18,21 +17,27 @@ import {
   DialogContentText,
   DialogActions,
   TextField,
+  CircularProgress,
+  Tooltip,
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import { useSnackbar } from 'notistack'; // Import useSnackbar
+import DeleteIcon from '@mui/icons-material/Delete';
+import EditIcon from '@mui/icons-material/Edit';
+import { useSnackbar } from 'notistack';
+import PropTypes from 'prop-types';
 
 const style = {
   position: 'absolute',
   top: '50%',
   left: '50%',
   transform: 'translate(-50%, -50%)',
-  width: 600,
+  width: '90%',
+  maxWidth: 800,
   bgcolor: 'background.paper',
   borderRadius: 2,
   boxShadow: 24,
   p: 4,
-  maxHeight: '80vh',
+  maxHeight: '85vh',
   overflowY: 'auto',
 };
 
@@ -43,19 +48,32 @@ const InterviewDetailsModal = ({
   candidateId,
   onCancelInterview,
   onUpdateInterview,
+  userRole, // Added prop to determine user role
 }) => {
-  const { enqueueSnackbar } = useSnackbar(); // Initialize enqueueSnackbar
+  const { enqueueSnackbar } = useSnackbar();
   const [openConfirm, setOpenConfirm] = useState(false);
   const [selectedInterviewToCancel, setSelectedInterviewToCancel] = useState(null);
   const [openUpdateDialog, setOpenUpdateDialog] = useState(false);
   const [selectedInterviewToUpdate, setSelectedInterviewToUpdate] = useState(null);
   const [newDateTime, setNewDateTime] = useState('');
-  const [actionLoading, setActionLoading] = useState(false); // Loading state
+  const [actionLoading, setActionLoading] = useState(false);
 
   useEffect(() => {
     console.log('InterviewDetailsModal Open:', open);
     console.log('Interviews Received:', interviews);
   }, [open, interviews]);
+
+  // Function to format date and time
+  const formatDateTime = (dateTime) => {
+    const options = {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    };
+    return new Date(dateTime).toLocaleString(undefined, options);
+  };
 
   // Handle opening confirmation dialog for cancellation
   const handleOpenConfirm = (interview) => {
@@ -128,33 +146,57 @@ const InterviewDetailsModal = ({
         aria-describedby="interview-details-description"
       >
         <Box sx={style}>
-          <Typography
-            id="interview-details-title"
-            variant="h6"
-            component="h2"
-            gutterBottom
+          {/* Header Section */}
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              mb: 2,
+            }}
           >
-            Interview Details
-          </Typography>
+            <Typography id="interview-details-title" variant="h6" component="h2">
+              Interview Details
+            </Typography>
+            <Button onClick={onClose} variant="outlined" startIcon={<ExpandMoreIcon />}>
+              Close
+            </Button>
+          </Box>
           <Divider sx={{ mb: 2 }} />
 
+          {/* Interviews List */}
           {interviews && interviews.length > 0 ? (
             interviews.map((interview) => (
-              <Accordion key={interview.interviewRefId} sx={{ mb: 1 }}>
-                <AccordionSummary
-                  expandIcon={<ExpandMoreIcon />}
-                  aria-controls={`${interview.interviewRefId}-content`}
-                  id={`${interview.interviewRefId}-header`}
-                >
-                  <Typography>
-                    {new Date(interview.scheduledDateTime).toLocaleString()} - Round{' '}
-                    {interview.roundNumber}
-                  </Typography>
-                </AccordionSummary>
-                <AccordionDetails>
+              <Card
+                key={interview.interviewRefId}
+                sx={{
+                  mb: 2,
+                  transition: 'transform 0.2s',
+                  '&:hover': { transform: 'scale(1.02)', boxShadow: 6 },
+                }}
+              >
+                <CardContent>
                   <Grid container spacing={2}>
-                    <Grid item xs={12}>
-                      <Typography variant="body2">
+                    {/* Interview Header */}
+                    <Grid item xs={12} sm={6}>
+                      <Typography variant="subtitle1">
+                        <strong>Date & Time:</strong> {formatDateTime(interview.scheduledDateTime)}
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <Typography variant="subtitle1">
+                        <strong>Round:</strong> {interview.roundNumber}
+                      </Typography>
+                    </Grid>
+
+                    {/* Interviewer Details */}
+                    <Grid item xs={12} sm={6}>
+                      <Typography variant="subtitle1">
+                        <strong>Interviewer:</strong> {interview.interviewerName || 'N/A'}
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <Typography variant="subtitle1">
                         <strong>Status:</strong>{' '}
                         <Chip
                           label={interview.status}
@@ -169,6 +211,8 @@ const InterviewDetailsModal = ({
                         />
                       </Typography>
                     </Grid>
+
+                    {/* Additional Details */}
                     {interview.feedback && (
                       <Grid item xs={12}>
                         <Typography variant="body2">
@@ -190,49 +234,56 @@ const InterviewDetailsModal = ({
                         </Typography>
                       </Grid>
                     )}
-                    {interview.rating && (
+                    {interview.rating !== undefined && (
                       <Grid item xs={12}>
                         <Typography variant="body2">
                           <strong>Rating:</strong> {interview.rating}
                         </Typography>
                       </Grid>
                     )}
+
                     {/* Action Buttons */}
-                    {interview.status?.toUpperCase() !== 'CANCELLED' && (
-                      <>
-                        {console.log(`Rendering buttons for interviewRefId: ${interview.interviewRefId}`)}
-                        <Grid item xs={12} sx={{ display: 'flex', gap: 2 }}>
-                          <Button
-                            variant="contained"
-                            color="error"
-                            size="small"
-                            onClick={() => handleOpenConfirm(interview)}
-                            sx={{ textTransform: 'none' }}
-                            disabled={actionLoading}
-                          >
-                            {actionLoading && selectedInterviewToCancel?.interviewRefId === interview.interviewRefId
-                              ? 'Cancelling...'
-                              : 'Cancel Interview'}
-                          </Button>
-                          <Button
-                            variant="contained"
-                            color="secondary"
-                            size="small"
-                            onClick={() => handleOpenUpdate(interview)}
-                            sx={{ textTransform: 'none' }}
-                            disabled={actionLoading}
-                          >
-                            Update Interview
-                          </Button>
+                    {(userRole === 'recruiter' || userRole === 'admin') &&
+                      interview.status.toUpperCase() !== 'CANCELLED' && (
+                        <Grid item xs={12} sx={{ mt: 2 }}>
+                          <Tooltip title="Cancel this interview">
+                            <Button
+                              variant="contained"
+                              color="error"
+                              size="small"
+                              onClick={() => handleOpenConfirm(interview)}
+                              sx={{ mr: 2, textTransform: 'none' }}
+                              disabled={actionLoading}
+                              startIcon={<DeleteIcon />}
+                            >
+                              {actionLoading && selectedInterviewToCancel?.interviewRefId === interview.interviewRefId
+                                ? 'Cancelling...'
+                                : 'Cancel Interview'}
+                            </Button>
+                          </Tooltip>
+                          <Tooltip title="Update the interview schedule">
+                            <Button
+                              variant="contained"
+                              color="secondary"
+                              size="small"
+                              onClick={() => handleOpenUpdate(interview)}
+                              sx={{ textTransform: 'none' }}
+                              disabled={actionLoading}
+                              startIcon={<EditIcon />}
+                            >
+                              {actionLoading && selectedInterviewToUpdate?.interviewRefId === interview.interviewRefId
+                                ? 'Updating...'
+                                : 'Update Interview'}
+                            </Button>
+                          </Tooltip>
                         </Grid>
-                      </>
-                    )}
+                      )}
                   </Grid>
-                </AccordionDetails>
-              </Accordion>
+                </CardContent>
+              </Card>
             ))
           ) : (
-            <Typography variant="body2">No interviews scheduled.</Typography>
+            <Typography variant="body1">No interviews scheduled.</Typography>
           )}
         </Box>
       </Modal>
@@ -247,20 +298,21 @@ const InterviewDetailsModal = ({
         <DialogTitle id="confirm-cancel-title">Confirm Cancellation</DialogTitle>
         <DialogContent>
           <DialogContentText id="confirm-cancel-description">
-            Are you sure you want to cancel this interview?
+            Are you sure you want to cancel this interview? This action cannot be undone.
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseConfirm} disabled={actionLoading}>
+          <Button onClick={handleCloseConfirm} disabled={actionLoading} sx={{ textTransform: 'none' }}>
             No
           </Button>
           <Button
             onClick={handleConfirmCancel}
             color="error"
-            autoFocus
+            variant="contained"
             disabled={actionLoading}
+            sx={{ textTransform: 'none' }}
           >
-            {actionLoading ? 'Cancelling...' : 'Yes, Cancel'}
+            {actionLoading ? <CircularProgress size={24} color="inherit" /> : 'Yes, Cancel'}
           </Button>
         </DialogActions>
       </Dialog>
@@ -294,7 +346,7 @@ const InterviewDetailsModal = ({
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseUpdate} disabled={actionLoading}>
+          <Button onClick={handleCloseUpdate} disabled={actionLoading} sx={{ textTransform: 'none' }}>
             Cancel
           </Button>
           <Button
@@ -302,13 +354,37 @@ const InterviewDetailsModal = ({
             variant="contained"
             color="primary"
             disabled={actionLoading || !newDateTime}
+            sx={{ textTransform: 'none' }}
           >
-            {actionLoading ? 'Updating...' : 'Update'}
+            {actionLoading ? <CircularProgress size={24} color="inherit" /> : 'Update'}
           </Button>
         </DialogActions>
       </Dialog>
     </>
   );
+};
+
+// PropTypes for type checking
+InterviewDetailsModal.propTypes = {
+  open: PropTypes.bool.isRequired,
+  onClose: PropTypes.func.isRequired,
+  interviews: PropTypes.arrayOf(
+    PropTypes.shape({
+      interviewRefId: PropTypes.string.isRequired,
+      scheduledDateTime: PropTypes.string.isRequired,
+      roundNumber: PropTypes.string.isRequired,
+      interviewerName: PropTypes.string,
+      status: PropTypes.string.isRequired,
+      feedback: PropTypes.string,
+      notes: PropTypes.string,
+      selectionStatus: PropTypes.string,
+      rating: PropTypes.number,
+    })
+  ).isRequired,
+  candidateId: PropTypes.string.isRequired,
+  onCancelInterview: PropTypes.func.isRequired,
+  onUpdateInterview: PropTypes.func.isRequired,
+  userRole: PropTypes.string.isRequired, // Added to handle role-based actions
 };
 
 export default InterviewDetailsModal;
