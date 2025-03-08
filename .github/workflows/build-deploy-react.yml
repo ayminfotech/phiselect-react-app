@@ -43,7 +43,7 @@ jobs:
           script: |
             set -ex
             REMOTE_DIR="/home/ubuntu/react-app"
-            REPO_URL="https://${{ secrets.GIT_TOKEN }}@github.com/ayminfotech/react-app.git"
+            REPO_URL="https://${{ secrets.GIT_TOKEN }}@github.com/ayminfotech/phiselect-react-app.git"
             
             # Clone repo if it doesn't exist; otherwise, update it
             if [ ! -d "$REMOTE_DIR" ]; then
