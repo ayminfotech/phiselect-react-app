@@ -38,7 +38,7 @@ jobs:
         uses: appleboy/ssh-action@v0.1.8
         with:
           host: 10.0.2.163
-          username: ubuntu
+          username: ec2-user
           key: ${{ secrets.EC2PHISELECT }}
           script: |
             set -ex
