@@ -42,7 +42,7 @@ jobs:
           key: ${{ secrets.EC2PHISELECT }}
           script: |
             set -ex
-            REMOTE_DIR="/home/ubuntu/react-app"
+            REMOTE_DIR="/home/ec2-user/react-app"
             REPO_URL="https://${{ secrets.GIT_TOKEN }}@github.com/ayminfotech/phiselect-react-app.git"
             
             # Clone repo if it doesn't exist; otherwise, update it
