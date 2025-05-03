@@ -3,7 +3,7 @@
 import axios from 'axios';
 import {jwtDecode} from 'jwt-decode'; // Corrected import
 
-const API_BASE_URL =  'http://10.0.101.11:8380/api' // Updated base URL
+const API_BASE_URL =  'https://10.0.101.11:8380/api' // Updated base URL
 
 // Create an axios instance for interview-related API calls
 const axiosInstance = axios.create({
