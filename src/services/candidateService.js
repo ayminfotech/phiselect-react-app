@@ -2,7 +2,7 @@
 import axios from 'axios';
 import {jwtDecode} from 'jwt-decode'; // Corrected import
 
-const API_BASE_URL = 'http://localhost:8380/api/candidates'; // Adjust as needed
+const API_BASE_URL = 'http://10.0.101.11:8380/api/candidates'; // Adjust as needed
 
 // Create axios instance
 const axiosInstance = axios.create({
