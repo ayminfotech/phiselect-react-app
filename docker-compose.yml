@@ -1,9 +1,10 @@
 version: '3.8'
-
 services:
-  react-app:
-    build: .
-    container_name: phiselect-react-app
+  reactapp:
+    image: sudhaaym/react-app:latest
+    container_name: reactapp
     ports:
       - "80:80"
     restart: always
+    environment:
+      - NODE_ENV=production
