@@ -2,7 +2,7 @@ import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
 
 const apiService = axios.create({
-  baseURL: 'https://test.phiselect.com/api/v1/auth', // Adjust if needed
+  baseURL: 'http://test.phiselect.com/api/v1/auth', // Adjust if needed
 });
 
 // Interceptor to include token in headers for all requests
