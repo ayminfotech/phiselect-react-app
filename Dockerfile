@@ -6,16 +6,16 @@ RUN npm install
 COPY . .
 RUN npm run build
 
-# Stage 2: Serve using Nginx
+# Stage 2: Serve with Nginx
 FROM nginx:alpine
 
-# Remove all existing config files
+# Remove default Nginx config
 RUN rm -rf /etc/nginx/conf.d/*
 
-# Copy your custom configuration
+# Copy custom Nginx config
 COPY default.conf /etc/nginx/conf.d/default.conf
 
-# Copy built app
+# Copy built React files
 COPY --from=build /app/build /usr/share/nginx/html
 
 EXPOSE 80
