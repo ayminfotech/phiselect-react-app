@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'http://test-app.phiselect.com:8380',
+  baseURL: '/api',
   withCredentials: true,
 });
 
