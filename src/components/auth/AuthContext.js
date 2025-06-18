@@ -20,7 +20,7 @@ export const AuthProvider = ({ children }) => {
    */
   const refreshToken = async () => {
     try {
-      const response = await axios.post('/api/v1/auth/refresh-token', null, {
+      const response = await axios.post('/v1/auth/refresh-token', null, {
         headers: {
           Authorization: `Bearer ${auth?.refresh_token}`,
         },
@@ -52,7 +52,7 @@ export const AuthProvider = ({ children }) => {
    */
   const login = async (credentials) => {
     try {
-      const response = await axios.post('/api/v1/auth/authenticate', credentials, {
+      const response = await axios.post('/v1/auth/authenticate', credentials, {
         headers: {
           'Content-Type': 'application/json',
           Accept: '*/*',
