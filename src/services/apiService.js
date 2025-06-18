@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const apiService = axios.create({
-    baseURL: 'https://test.phiselect.com/api/v1/auth', // Adjust as per your backend URL
+    baseURL: 'http://test-app.phiselect.com:8380/api/v1/auth', // Adjust as per your backend URL
 });
 
 // Interceptor to include token in headers for all requests

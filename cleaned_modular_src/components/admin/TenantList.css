@@ -1,0 +1,145 @@
+/* src/components/admin/TenantList.css */
+
+/* Container for Tenant List */
+.tenant-list-container {
+  width: 100%;
+  overflow-x: auto; /* Enables horizontal scroll on small screens */
+  margin-top: 1.5rem;
+}
+
+/* Tenant Table Styling */
+.tenant-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 600px; /* Ensures table has enough width on larger screens */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+/* Table Header */
+.tenant-table thead {
+  background-color: #007bff; /* Bootstrap primary color */
+  color: #ffffff;
+}
+
+.tenant-table th,
+.tenant-table td {
+  padding: 1rem;
+  text-align: left;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.tenant-table th {
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05rem;
+}
+
+/* Tenant Name Styling */
+.tenant-name {
+  font-weight: 500;
+  color: #343a40;
+}
+
+/* Status Badge Styling */
+.status-badge {
+  padding: 0.4rem 0.8rem;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  color: #ffffff;
+  display: inline-block;
+}
+
+.status-badge.active {
+  background-color: #28a745; /* Green for Active */
+}
+
+.status-badge.inactive {
+  background-color: #dc3545; /* Red for Inactive */
+}
+
+/* Actions Cell Styling */
+.actions-cell {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.action-button {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.5rem 0.8rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: background-color 0.3s, transform 0.2s;
+}
+
+.edit-button {
+  background-color: #17a2b8; /* Info color */
+  color: #ffffff;
+}
+
+.edit-button:hover {
+  background-color: #138496;
+  transform: translateY(-2px);
+}
+
+.delete-button {
+  background-color: #dc3545; /* Danger color */
+  color: #ffffff;
+}
+
+.delete-button:hover {
+  background-color: #c82333;
+  transform: translateY(-2px);
+}
+
+.activate-button {
+  background-color: #28a745; /* Success color */
+  color: #ffffff;
+}
+
+.activate-button:hover {
+  background-color: #218838;
+  transform: translateY(-2px);
+}
+
+.deactivate-button {
+  background-color: #ffc107; /* Warning color */
+  color: #212529;
+}
+
+.deactivate-button:hover {
+  background-color: #e0a800;
+  transform: translateY(-2px);
+}
+
+/* No Data Row Styling */
+.no-data {
+  text-align: center;
+  padding: 1.5rem;
+  color: #6c757d; /* Secondary color */
+  font-style: italic;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .tenant-table th,
+  .tenant-table td {
+    padding: 0.75rem;
+    font-size: 0.85rem;
+  }
+
+  .action-button {
+    padding: 0.4rem 0.6rem;
+    font-size: 0.75rem;
+  }
+
+  .status-badge {
+    font-size: 0.75rem;
+    padding: 0.3rem 0.6rem;
+  }
+}

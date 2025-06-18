@@ -1,0 +1,120 @@
+/* src/styles/TenantsListPage.css */
+
+/* Page Container */
+.tenants-list-page {
+    padding: 2rem;
+    background-color: var(--color-light);
+    min-height: 100vh;
+  }
+  
+  /* Header */
+  .tenants-list-page__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+  }
+  
+  .tenants-list-page__header h2 {
+    font-size: 1.75rem;
+    color: var(--color-secondary);
+  }
+  
+  /* Table Container */
+  .tenants-list-page__table-container {
+    overflow-x: auto;
+  }
+  
+  /* Table Styles */
+  .tenants-table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: var(--color-white);
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  }
+  
+  .tenants-table thead {
+    background-color: var(--color-primary);
+    color: var(--color-white);
+  }
+  
+  .tenants-table th,
+  .tenants-table td {
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 1px solid var(--color-gray);
+  }
+  
+  .tenants-table th {
+    font-size: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05rem;
+  }
+  
+  .tenants-table tbody tr:hover {
+    background-color: #f1f1f1;
+  }
+  
+  .tenants-table tbody tr td.actions-column {
+    display: flex;
+    gap: 0.5rem;
+  }
+  
+  /* Status Badges */
+  .status-badge {
+    padding: 0.25rem 0.5rem;
+    border-radius: 12px;
+    font-size: 0.875rem;
+    color: var(--color-white);
+  }
+  
+  .status-active {
+    background-color: var(--color-success);
+  }
+  
+  .status-inactive {
+    background-color: var(--color-error);
+  }
+  
+  /* Buttons in Table */
+  .tenants-table .button {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+  }
+  
+  .button--secondary {
+    background-color: var(--color-secondary);
+    color: var(--color-white);
+  }
+  
+  .button--secondary:hover {
+    background-color: var(--color-primary-dark);
+  }
+  
+  .button--info {
+    background-color: var(--color-primary);
+    color: var(--color-white);
+  }
+  
+  .button--info:hover {
+    background-color: var(--color-primary-dark);
+  }
+  
+  /* Responsive Design */
+  @media (max-width: 768px) {
+    .tenants-table th,
+    .tenants-table td {
+      padding: 0.75rem;
+    }
+  
+    .tenants-list-page__header h2 {
+      font-size: 1.5rem;
+    }
+  
+    .tenants-list-page__header .button {
+      padding: 0.5rem 1rem;
+      font-size: 0.875rem;
+    }
+  }

@@ -1,0 +1,43 @@
+/* src/styles/BackToHomeButton.css */
+
+.back-to-home {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background-color: var(--color-secondary);
+    color: var(--color-white);
+    border: none;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: background-color var(--transition-speed), transform var(--transition-speed);
+    font-size: 1rem;
+    text-decoration: none; /* Removes underline if any */
+  }
+  
+  .back-to-home:hover {
+    background-color: var(--color-secondary-dark);
+    transform: translateY(-2px);
+  }
+  
+  .back-to-home:focus {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+  
+  .back-to-home i {
+    /* Styles for the icon */
+    font-size: 1.2rem;
+  }
+  
+  /* Responsive Adjustments */
+  @media (max-width: 768px) {
+    .back-to-home {
+      padding: 0.4rem 0.8rem;
+      font-size: 0.9rem;
+    }
+  
+    .back-to-home i {
+      font-size: 1rem;
+    }
+  }

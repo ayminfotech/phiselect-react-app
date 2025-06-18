@@ -1,0 +1,27 @@
+.organization-form {
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-radius: 5px;
+  }
+  
+  .organization-form h2 {
+    margin-bottom: 15px;
+  }
+  
+  .organization-form input {
+    padding: 8px;
+    margin-bottom: 15px;
+    width: 100%;
+  }
+  
+  .organization-form button {
+    padding: 10px 15px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    cursor: pointer;
+  }
+  
+  .organization-form button:hover {
+    background-color: #0056b3;
+  }
