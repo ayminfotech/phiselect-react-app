@@ -4,7 +4,7 @@ import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
 
 // Base URL configuration (adjust as needed)
-const API_BASE_URL = 'https://test.phiselect.com/api/users';
+const API_BASE_URL = 'http://test.phiselect.com/api/users';
 
 /**
  * Helper function to get the authentication token from localStorage or another secure storage.

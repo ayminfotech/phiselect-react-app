@@ -2,7 +2,7 @@ import axios from 'axios';
 import {jwtDecode} from 'jwt-decode'; // Ensure jwt-decode is installed
 
 // Base URL configuration
-const API_BASE_URL = 'https://test.phiselect.com';
+const API_BASE_URL = 'http://test.phiselect.com';
 
 // Axios instance with default configurations
 const axiosInstance = axios.create({
