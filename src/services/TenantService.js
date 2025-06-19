@@ -1,7 +1,7 @@
 // src/services/TenetService.js
 import axios from 'axios';
 
-const API_BASE_URL = '/api'; // Ensure this matches your backend's base URL
+const API_BASE_URL = 'https://test-ats.phiselect.com/api'; // Ensure this matches your backend's base URL
 
 const api = axios.create({
   baseURL: API_BASE_URL,
