@@ -136,8 +136,8 @@ export const addCandidates = async (candidates, setSuccessMessage, setErrorMessa
 
     // Append resume files
     candidates.forEach((c) => {
-      if (c.resumeFile) {
-        formData.append('resumes', c.resumeFile); // ✅ Important: repeat key `resumes`
+      if (c.resumeFile instanceof File) {
+        formData.append('resumes', c.resumeFile);
       }
     });
 
