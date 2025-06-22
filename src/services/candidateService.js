@@ -118,7 +118,6 @@ export const addCandidates = async (candidates, setSuccessMessage, setErrorMessa
   try {
     const formData = new FormData();
 
-    // Strip resumeFile before JSON.stringify
     const candidatePayload = candidates.map((c) => ({
       firstName: c.firstName,
       lastName: c.lastName,
@@ -134,7 +133,6 @@ export const addCandidates = async (candidates, setSuccessMessage, setErrorMessa
 
     formData.append('candidates', JSON.stringify(candidatePayload));
 
-    // Append resume files
     candidates.forEach((c) => {
       if (c.resumeFile instanceof File) {
         formData.append('resumes', c.resumeFile);
@@ -145,15 +143,18 @@ export const addCandidates = async (candidates, setSuccessMessage, setErrorMessa
       headers: { 'Content-Type': 'multipart/form-data' },
     });
 
-    if (response.status === 201) {
-      if (typeof setSuccessMessage === 'function') {
-        setSuccessMessage('Candidates added successfully!');
-      }
-      return response.data;
+    const createdCandidates = response.data;
+
+    if (typeof setSuccessMessage === 'function') {
+      setSuccessMessage('Candidates added successfully!');
     }
+
+    return createdCandidates;
   } catch (error) {
     console.error('Error adding candidates:', error);
-    setErrorMessage(error.response?.data?.message || 'Failed to add candidates.');
+    if (typeof setErrorMessage === 'function') {
+      setErrorMessage(error.response?.data?.message || 'Failed to add candidates.');
+    }
     throw error;
   }
 };
