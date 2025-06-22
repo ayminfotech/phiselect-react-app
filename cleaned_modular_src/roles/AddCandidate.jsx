@@ -138,22 +138,8 @@ const AddCandidate = ({ open, handleClose, jobId, positions }) => {
    */
   const handleSubmit = async (values, { setSubmitting, resetForm }) => {
     try {
-      const payload = values.candidates.map((candidate) => ({
-        firstName: candidate.firstName,
-        lastName: candidate.lastName,
-        email: candidate.email,
-        phoneNumber: candidate.phoneNumber,
-        currentCompany: candidate.currentCompany,
-        previousCompanies: candidate.previousCompanies,
-        skillSet: candidate.skillSet,
-        panCardNumber: candidate.panCardNumber,
-        recruiterRefId: candidate.recruiterRefId,
-        appliedPositions: candidate.appliedPositions,
-        resumeFile: candidate.resumeFile, // Include file in payload
-      }));
-  
       const createdCandidates = await addCandidates(
-        payload,
+        values.candidates,         // This includes resumeFile
         setSuccessMessage,
         setErrorMessage
       );
@@ -171,14 +157,6 @@ const AddCandidate = ({ open, handleClose, jobId, positions }) => {
     } finally {
       setSubmitting(false);
     }
-  };
-
-  /**
-   * Handles closing the modal.
-   * Resets the form and passes null to indicate no new candidates were added.
-   */
-  const handleModalClose = () => {
-    handleClose(null); // Pass null to indicate no new candidates added.
   };
 
   return (

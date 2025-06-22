@@ -106,65 +106,53 @@ export const addCandidate = async (candidateData, resumeFile) => {
 /**
  * Batch-add multiple candidates with optional resumes.
  *
- * @param {Array} candidates - Array of candidate objects to be added.
+ * @param {Array} candidates - Array of candidate objects (with resumeFile field).
  * @param {Function} setSuccessMessage - Function to update success message in UI.
  * @param {Function} setErrorMessage - Function to update error message in UI.
  * @returns {Promise<Array>} - Array of created candidate objects.
+ */
+/**
+ * Batch add candidates with optional resumes
  */
 export const addCandidates = async (candidates, setSuccessMessage, setErrorMessage) => {
   try {
     const formData = new FormData();
 
-    // Append candidate data
-    const candidateData = candidates.map((candidate) => ({
-      firstName: candidate.firstName,
-      lastName: candidate.lastName,
-      email: candidate.email,
-      phoneNumber: candidate.phoneNumber,
-      currentCompany: candidate.currentCompany || '',
-      skillSet: candidate.skillSet || '',
-      panCardNumber: candidate.panCardNumber,
-      recruiterRefId: candidate.recruiterRefId,
-      appliedPositions: candidate.appliedPositions, // Assuming this is an array of PositionDTO
+    // Strip resumeFile before JSON.stringify
+    const candidatePayload = candidates.map((c) => ({
+      firstName: c.firstName,
+      lastName: c.lastName,
+      email: c.email,
+      phoneNumber: c.phoneNumber,
+      currentCompany: c.currentCompany || '',
+      previousCompanies: c.previousCompanies || '',
+      skillSet: c.skillSet || '',
+      panCardNumber: c.panCardNumber,
+      recruiterRefId: c.recruiterRefId,
+      appliedPositions: c.appliedPositions,
     }));
 
-    formData.append('candidates', JSON.stringify(candidateData));
+    formData.append('candidates', JSON.stringify(candidatePayload));
 
-    // Append resume files, if provided
-    candidates.forEach((candidate, index) => {
-      if (candidate.resumeFile) {
-        formData.append(`resumes[${index}]`, candidate.resumeFile);
+    // Append resume files
+    candidates.forEach((c) => {
+      if (c.resumeFile) {
+        formData.append('resumes', c.resumeFile); // ✅ Important: repeat key `resumes`
       }
     });
 
-    // Send POST request to batch-add endpoint
     const response = await axiosInstance.post('/batch-add', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
+      headers: { 'Content-Type': 'multipart/form-data' },
     });
 
-    // Check for successful creation
     if (response.status === 201) {
       setSuccessMessage('Candidates added successfully!');
-      console.log('Created candidates:', response.data); // Log created candidates for debugging
-      return response.data; // Return the created candidates
+      return response.data;
     }
   } catch (error) {
     console.error('Error adding candidates:', error);
-
-    // Handle error responses and update UI messages
-    if (error.response) {
-      if (error.response.status === 400 || error.response.status === 500) {
-        setErrorMessage(error.response.data.error || 'An error occurred while adding candidates.');
-      } else {
-        setErrorMessage('Unexpected error occurred.');
-      }
-    } else {
-      setErrorMessage('Network error or server not reachable.');
-    }
-
-    throw error.response?.data || 'Error adding candidates.';
+    setErrorMessage(error.response?.data?.message || 'Failed to add candidates.');
+    throw error;
   }
 };
 /**
