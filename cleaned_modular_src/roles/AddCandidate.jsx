@@ -138,7 +138,6 @@ const AddCandidate = ({ open, handleClose, jobId, positions }) => {
    */
   const handleSubmit = async (values, { setSubmitting, resetForm }) => {
     try {
-      // Prepare the payload by mapping each candidate's data.
       const payload = values.candidates.map((candidate) => ({
         firstName: candidate.firstName,
         lastName: candidate.lastName,
@@ -150,31 +149,26 @@ const AddCandidate = ({ open, handleClose, jobId, positions }) => {
         panCardNumber: candidate.panCardNumber,
         recruiterRefId: candidate.recruiterRefId,
         appliedPositions: candidate.appliedPositions,
-        // Resume files are handled separately in the service.
+        resumeFile: candidate.resumeFile, // Include file in payload
       }));
-
-      // Call the batch add service, passing the candidates and state setters.
+  
       const createdCandidates = await addCandidates(
         payload,
-        values.candidates,
         setSuccessMessage,
         setErrorMessage
       );
-
-      // If candidates are successfully created, display success message and reset the form.
+  
       if (createdCandidates) {
         setSuccessMessage('Candidates added successfully!');
         setErrorMessage(null);
-        handleClose(createdCandidates); // Pass the created candidates back to the parent component.
-        resetForm(); // Reset the form fields.
+        handleClose(createdCandidates);
+        resetForm();
       }
     } catch (err) {
-      // Handle errors from the service.
       console.error('Error adding candidates:', err);
       setErrorMessage(err.message || 'Failed to add candidates.');
       setSuccessMessage(null);
     } finally {
-      // End the submitting state.
       setSubmitting(false);
     }
   };
