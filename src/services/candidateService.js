@@ -146,7 +146,9 @@ export const addCandidates = async (candidates, setSuccessMessage, setErrorMessa
     });
 
     if (response.status === 201) {
-      setSuccessMessage('Candidates added successfully!');
+      if (typeof setSuccessMessage === 'function') {
+        setSuccessMessage('Candidates added successfully!');
+      }
       return response.data;
     }
   } catch (error) {
