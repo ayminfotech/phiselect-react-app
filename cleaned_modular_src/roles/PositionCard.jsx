@@ -199,7 +199,11 @@ const PositionCard = ({ jobId, position, totalPositions }) => {
       <ScheduleInterviewModal
         open={openScheduleInterview}
         onClose={handleScheduleInterviewClose}
-        candidateId={candidates[0]?.id} // In real app you’d select which candidate
+        candidate={candidates[0]} // Pass full candidate object instead of just ID
+        onInterviewScheduled={(data) => {
+          setSuccessMessage('Interview scheduled successfully!');
+          handleScheduleInterviewClose();
+        }}// In real app you’d select which candidate
         positionId={position.positionId}
       />
     </Box>
