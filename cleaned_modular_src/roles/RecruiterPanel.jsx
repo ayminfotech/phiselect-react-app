@@ -578,64 +578,96 @@ const RecruiterPanel = () => {
       )}
 
       {/* Add Candidate Modal */}
-      <AddCandidate open={openAddCandidate} handleClose={(newlyAdded) => {
-        setOpenAddCandidate(false);
-        if (newlyAdded?.length) {
-          const mapped = newlyAdded.map((c) => ({
-            ...c,
-            id: c.id || c.candidateId,
-            scheduledInterviews: [],
-            appliedPositions: [{
-              positionId: selectedPosition?.positionId,
-              positionCode: selectedPosition?.positionCode,
-            }],
-          }));
-          setCandidates((prev) => [...prev, ...mapped]);
-        }
-      }} jobId={selectedJob?.jobRefId} positions={positions} />
+      <AddCandidate
+        open={openAddCandidate}
+        handleClose={(newlyAdded) => {
+          console.log('Newly Added Candidates:', newlyAdded); // Debugging
+          setOpenAddCandidate(false);
+          if (newlyAdded && newlyAdded.length > 0) {
+            const mappedNewCandidates = newlyAdded.map((candidate) => ({
+              ...candidate,
+              id: candidate.id || candidate.candidateId, // Ensure unique id
+              scheduledInterviews: [],
+            }));
+            setCandidates((prev) => [...prev, ...mappedNewCandidates]);
+            enqueueSnackbar(`${newlyAdded.length} candidate(s) added successfully!`, {
+              variant: 'success',
+            });
+          }
+        }}
+        jobId={selectedJob?.jobRefId} // Ensure you're passing the correct jobId
+        positions={positions} // Pass the positions array
+      />
 
+      {/* Single-Candidate Interview Modal */}
       <ScheduleInterviewModal
         open={openScheduleModal}
         onClose={() => setOpenScheduleModal(false)}
         candidate={candidateForInterview}
-        onInterviewScheduled={async () => {
-          const interviews = await getScheduledInterviewsByCandidate(candidateForInterview.id);
-          setCandidates((prev) =>
-            prev.map((c) =>
-              c.id === candidateForInterview.id ? { ...c, scheduledInterviews: interviews } : c
-            )
-          );
-          enqueueSnackbar('Interview scheduled successfully!', { variant: 'success' });
+        onInterviewScheduled={async (updatedInterview) => {
+          console.log('Interview Scheduled:', updatedInterview); // Debugging
+          // Fetch the latest interviews for the candidate
+          try {
+            const interviews = await getScheduledInterviewsByCandidate(candidateForInterview.id);
+            setCandidates((prev) =>
+              prev.map((cand) =>
+                cand.id === candidateForInterview.id
+                  ? { ...cand, scheduledInterviews: interviews }
+                  : cand
+              )
+            );
+            enqueueSnackbar('Interview scheduled successfully!', { variant: 'success' });
+          } catch (error) {
+            console.error('Error fetching updated interviews:', error);
+            enqueueSnackbar('Failed to update scheduled interviews.', { variant: 'error' });
+          }
         }}
       />
 
+      {/* Batch Schedule Interview Modal */}
       <BatchScheduleInterviewModal
         open={openBatchScheduleModal}
         onClose={() => setOpenBatchScheduleModal(false)}
         candidateIds={selectedCandidateIds}
-        onBatchInterviewScheduled={async (updatedIds) => {
-          const updates = await Promise.all(
-            updatedIds.map((id) => getScheduledInterviewsByCandidate(id))
-          );
-          setCandidates((prev) =>
-            prev.map((c) => {
-              const idx = updatedIds.indexOf(c.id);
-              return idx !== -1 ? { ...c, scheduledInterviews: updates[idx] } : c;
-            })
-          );
+        onBatchInterviewScheduled={async (updatedCandidates) => {
+          console.log('Batch Interviews Scheduled for Candidates:', updatedCandidates); // Debugging
+          // Update the candidate list with updated interviews
+          try {
+            const updatedInterviewPromises = updatedCandidates.map((candidateId) =>
+              getScheduledInterviewsByCandidate(candidateId)
+            );
+            const allUpdatedInterviews = await Promise.all(updatedInterviewPromises);
+
+            setCandidates((prev) =>
+              prev.map((cand) => {
+                const index = updatedCandidates.indexOf(cand.id);
+                if (index !== -1) {
+                  return { ...cand, scheduledInterviews: allUpdatedInterviews[index] };
+                }
+                return cand;
+              })
+            );
+
+            setSelectedCandidateIds([]);
+            enqueueSnackbar('Interviews scheduled successfully!', { variant: 'success' });
+          } catch (error) {
+            console.error('Error fetching updated interviews:', error);
+            enqueueSnackbar('Failed to update scheduled interviews.', { variant: 'error' });
+          }
         }}
       />
 
+      {/* Interview Details Modal */}
       <InterviewDetailsModal
         open={openInterviewDetails}
         onClose={() => setOpenInterviewDetails(false)}
         interviews={selectedInterview}
-        candidateId={selectedInterviewCandidateId}
-        onCancelInterview={handleCancelInterview}
-        onUpdateInterview={handleUpdateInterview}
-        userRole={userRole}
+        candidateId={selectedInterviewCandidateId} // Pass candidateId
+        onCancelInterview={handleCancelInterview} // Pass the cancel function
+        onUpdateInterview={handleUpdateInterview} // Pass the update function
+        userRole={userRole} // Pass the userRole prop
       />
-    </>
+    </Box>
   );
 
   //------------------------------------------------------------
