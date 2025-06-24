@@ -67,19 +67,18 @@ const ScheduleInterviewModal = ({ open, onClose, candidate, onInterviewScheduled
       return;
     }
 
-    // Ensure candidate has applied positions
-    if (!candidate.appliedPositions || candidate.appliedPositions.length === 0) {
-      setError('Candidate has no applied positions.');
-      return;
-    }
+   // Handle appliedJobIds instead of appliedPositions
+   if (!candidate.appliedJobIds || candidate.appliedJobIds.length === 0) {
+    setError('Candidate has no applied job IDs.');
+    return;
+  }
 
-    // Extract the first applied position
-    const firstAppliedPosition = candidate.appliedPositions[0];
+  const firstAppliedJob = candidate.appliedJobIds[0];
 
-    if (!firstAppliedPosition || !firstAppliedPosition.positionId || !firstAppliedPosition.positionCode) {
-      setError('Invalid position information for the candidate.');
-      return;
-    }
+  if (!firstAppliedJob?.positionId || !firstAppliedJob?.positionCode) {
+    setError('Invalid job ID information for the candidate.');
+    return;
+  }
 
     setLoading(true);
     setError(null);

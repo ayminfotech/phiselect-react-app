@@ -354,8 +354,8 @@ const RecruiterPanel = () => {
   
     console.log('✅ Scheduling Interview for:', enrichedCandidate);
   
-    if (!enrichedCandidate.appliedPositions || enrichedCandidate.appliedPositions.length === 0) {
-      enqueueSnackbar('Candidate has no applied positions.', { variant: 'error' });
+    if (!enrichedCandidate.appliedJobIds || enrichedCandidate.appliedJobIds.length === 0) {
+      enqueueSnackbar('Candidate has no applied job IDs.', { variant: 'error' });
       return;
     }
   
