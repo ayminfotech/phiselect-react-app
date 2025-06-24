@@ -1,4 +1,3 @@
-// src/components/ScheduleInterviewModal.jsx
 import React, { useState, useEffect } from 'react';
 import {
   Modal,
@@ -21,15 +20,14 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 
 const ScheduleInterviewModal = ({ open, onClose, candidate, onInterviewScheduled }) => {
   const { enqueueSnackbar } = useSnackbar();
-  const [interviewDateTime, setInterviewDateTime] = useState(null); // Initialize with null
-  const [interviewRound, setInterviewRound] = useState('ROUND_1'); // Default round
+  const [interviewDateTime, setInterviewDateTime] = useState(null);
+  const [interviewRound, setInterviewRound] = useState('ROUND_1');
   const [interviewerRefId, setInterviewerRefId] = useState('');
   const [interviewers, setInterviewers] = useState([]);
   const [loadingInterviewers, setLoadingInterviewers] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Fetch interviewers when modal opens
   useEffect(() => {
     if (open) {
       setInterviewDateTime(null);
@@ -55,7 +53,6 @@ const ScheduleInterviewModal = ({ open, onClose, candidate, onInterviewScheduled
   };
 
   const handleSubmit = async () => {
-    // Validate required fields
     if (!interviewDateTime || !interviewerRefId) {
       setError('Please select an interview date and an interviewer.');
       return;
@@ -67,18 +64,18 @@ const ScheduleInterviewModal = ({ open, onClose, candidate, onInterviewScheduled
       return;
     }
 
-   // Handle appliedJobIds instead of appliedPositions
-   if (!candidate.appliedJobIds || candidate.appliedJobIds.length === 0) {
-    setError('Candidate has no applied job IDs.');
-    return;
-  }
+    // Handle appliedJobIds instead of appliedPositions
+    if (!candidate.appliedJobIds || candidate.appliedJobIds.length === 0) {
+      setError('Candidate has no applied job IDs.');
+      return;
+    }
 
-  const firstAppliedJob = candidate.appliedJobIds[0];
+    const firstAppliedJob = candidate.appliedJobIds[0];
 
-  if (!firstAppliedJob?.positionId || !firstAppliedJob?.positionCode) {
-    setError('Invalid job ID information for the candidate.');
-    return;
-  }
+    if (!firstAppliedJob?.positionId || !firstAppliedJob?.positionCode) {
+      setError('Invalid job ID information for the candidate.');
+      return;
+    }
 
     setLoading(true);
     setError(null);
@@ -95,8 +92,8 @@ const ScheduleInterviewModal = ({ open, onClose, candidate, onInterviewScheduled
 
       const interviewData = {
         candidateId: candidate.id,
-        positionId: firstAppliedPosition.positionId,
-        positionName: firstAppliedPosition.positionCode, // Using positionCode as positionName
+        positionId: firstAppliedJob.positionId,
+        positionName: firstAppliedJob.positionCode,
         interviewerRefId,
         interviewerName: `${selectedInterviewer.firstName} ${selectedInterviewer.lastName}`,
         scheduledDateTime: interviewDateTime.toISOString(),
@@ -116,9 +113,7 @@ const ScheduleInterviewModal = ({ open, onClose, candidate, onInterviewScheduled
     }
   };
 
-  if (!candidate) {
-    return null;
-  }
+  if (!candidate) return null;
 
   return (
     <Modal open={open} onClose={onClose}>
@@ -152,7 +147,7 @@ const ScheduleInterviewModal = ({ open, onClose, candidate, onInterviewScheduled
             value={interviewDateTime}
             onChange={(newValue) => setInterviewDateTime(newValue)}
             renderInput={(params) => <TextField {...params} fullWidth sx={{ mb: 2 }} />}
-            disablePast // Disables selection of past dates
+            disablePast
           />
         </LocalizationProvider>
 
@@ -194,7 +189,6 @@ const ScheduleInterviewModal = ({ open, onClose, candidate, onInterviewScheduled
             <MenuItem value="ROUND_1">Round 1</MenuItem>
             <MenuItem value="ROUND_2">Round 2</MenuItem>
             <MenuItem value="ROUND_3">Round 3</MenuItem>
-            {/* Add more rounds as needed */}
           </Select>
         </FormControl>
 
