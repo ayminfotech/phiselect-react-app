@@ -344,9 +344,22 @@ const RecruiterPanel = () => {
   // Handle Schedule Interview Click
   //------------------------------------------------------------
   const handleScheduleInterviewClick = (candidate) => {
-    const enrichedCandidate = candidates.find(c => c.id === candidate.id || c.candidateId === candidate.id);
-    console.log('Scheduling Interview for Enriched Candidate:', enrichedCandidate);
-    setCandidateForInterview(enrichedCandidate || candidate);
+    const enrichedCandidate = candidates.find(
+      (c) =>
+        c.id === candidate.id ||
+        c.id === candidate.candidateId ||
+        c.candidateId === candidate.id ||
+        c.candidateId === candidate.candidateId
+    ) || candidate;
+  
+    console.log('✅ Scheduling Interview for:', enrichedCandidate);
+  
+    if (!enrichedCandidate.appliedPositions || enrichedCandidate.appliedPositions.length === 0) {
+      enqueueSnackbar('Candidate has no applied positions.', { variant: 'error' });
+      return;
+    }
+  
+    setCandidateForInterview(enrichedCandidate);
     setOpenScheduleModal(true);
   };
 
