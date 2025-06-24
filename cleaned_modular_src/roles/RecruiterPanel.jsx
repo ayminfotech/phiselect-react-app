@@ -588,6 +588,10 @@ const RecruiterPanel = () => {
               ...candidate,
               id: candidate.id || candidate.candidateId, // Ensure unique id
               scheduledInterviews: [],
+              appliedPositions: [{
+                positionId: selectedPosition?.positionId,
+                positionCode: selectedPosition?.positionCode,
+              }],
             }));
             setCandidates((prev) => [...prev, ...mappedNewCandidates]);
             enqueueSnackbar(`${newlyAdded.length} candidate(s) added successfully!`, {
