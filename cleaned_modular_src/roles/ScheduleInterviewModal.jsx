@@ -98,7 +98,7 @@ const ScheduleInterviewModal = ({ open, onClose, candidate, onInterviewScheduled
       const interviewData = {
         candidateId: candidate.id,
         positionId: firstAppliedPosition.positionId,
-        positionName: firstAppliedPosition.positionCode, // Using positionCode as positionName
+        positionCode: firstAppliedJob.positionCode, // Using positionCode as positionName
         interviewerRefId,
         interviewerName: `${selectedInterviewer.firstName} ${selectedInterviewer.lastName}`,
         scheduledDateTime: interviewDateTime.toISOString(),
