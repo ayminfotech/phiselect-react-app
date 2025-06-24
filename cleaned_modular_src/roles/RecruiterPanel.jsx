@@ -344,8 +344,9 @@ const RecruiterPanel = () => {
   // Handle Schedule Interview Click
   //------------------------------------------------------------
   const handleScheduleInterviewClick = (candidate) => {
-    console.log('Scheduling Interview for Candidate:', candidate); // Debugging
-    setCandidateForInterview(candidate);
+    const enrichedCandidate = candidates.find(c => c.id === candidate.id || c.candidateId === candidate.id);
+    console.log('Scheduling Interview for Enriched Candidate:', enrichedCandidate);
+    setCandidateForInterview(enrichedCandidate || candidate);
     setOpenScheduleModal(true);
   };
 
