@@ -122,7 +122,7 @@ export const provideInterviewFeedback = async (interviewerRefId, interviewRefId,
  */
 export const cancelInterview = async (candidateId, interviewRefId) => {
   try {
-    const response = await axiosInstance.patch('/cancel', { candidateId, interviewRefId });
+    const response = await axiosInstance.patch(`/candidates/${candidateId}/interviews/${interviewRefId}/cancel`)
     return response.data; // Assuming backend returns the updated interview
   } catch (error) {
     console.error('Error cancelling interview:', error);
@@ -141,9 +141,11 @@ export const cancelInterview = async (candidateId, interviewRefId) => {
  */
 export const updateInterview = async (candidateId, interviewRefId, updateData) => {
   try {
-    const payload = { candidateId, interviewRefId, ...updateData };
-    const response = await axiosInstance.put('/update', payload);
-    return response.data; // Assuming backend returns the updated interview
+    const response = await axiosInstance.put(
+      `/candidates/${candidateId}/interviews/${interviewRefId}/update`,
+      updateData // ✅ this is the body (InterviewScheduleRequestDTO)
+    );
+    return response.data;
   } catch (error) {
     console.error('Error updating interview:', error);
     throw error.response?.data || 'Error updating interview';
